@@ -9,3 +9,7 @@ build/
 *.jks
 *.keystore
 .DS_Store
+
+# Выгрузка персональных данных Garmin - держим вне репозитория
+*.zip
+/sample-data/
