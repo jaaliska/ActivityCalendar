@@ -1,4 +1,4 @@
-package com.jaaliska.activity_calendar.ui.theme
+package com.jaaliska.activitycalendar.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

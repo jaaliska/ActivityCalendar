@@ -1,4 +1,4 @@
-package com.jaaliska.activity_calendar
+package com.jaaliska.activitycalendar
 
 import org.junit.Test
 

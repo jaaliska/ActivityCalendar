@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.jaaliska.activity_calendar"
+    namespace = "com.jaaliska.activitycalendar"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.jaaliska.activity_calendar"
+        applicationId = "com.jaaliska.activitycalendar"
         minSdk = 28
         targetSdk = 37
         versionCode = 1
