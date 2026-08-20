@@ -5,7 +5,8 @@
 Решение по источнику данных: @docs/adr/ADR-001-data-source.md
 
 ## Стек
-Kotlin, Jetpack Compose, Room, Health Connect. Минимальный SDK 26.
+Kotlin, Jetpack Compose, Room, Health Connect. Минимальный SDK 28 —
+приложение Health Connect существует только с Android 9, ниже его нет физически.
 
 ## Архитектурные правила
 - UI читает данные ТОЛЬКО из Room. Никогда напрямую из Health Connect или парсера архива.
