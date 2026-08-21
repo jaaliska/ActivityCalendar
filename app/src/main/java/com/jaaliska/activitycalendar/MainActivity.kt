@@ -4,24 +4,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import com.jaaliska.activitycalendar.ui.activities.ActivityListScreen
 import com.jaaliska.activitycalendar.ui.theme.ActivityCalendarTheme
+import java.time.YearMonth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val repository = (application as ActivityCalendarApp).container.activityRepository
         setContent {
             ActivityCalendarTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
+                    ActivityListScreen(
+                        repository = repository,
+                        month = YearMonth.now(),
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
