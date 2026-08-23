@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.health.connect.client)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.kotlin.csv)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.room.testing)

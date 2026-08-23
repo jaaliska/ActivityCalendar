@@ -2,6 +2,7 @@ package com.jaaliska.activitycalendar
 
 import android.content.Context
 import androidx.room.Room
+import com.jaaliska.activitycalendar.data.csv.CsvImporter
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
 import com.jaaliska.activitycalendar.domain.ActivityRepository
@@ -14,6 +15,8 @@ class AppContainer(context: Context) {
         .build()
 
     val activityRepository: ActivityRepository = RoomActivityRepository(database.activityDao())
+
+    val csvImporter: CsvImporter = CsvImporter(activityRepository)
 
     private companion object {
         const val DATABASE_NAME = "activity-calendar.db"

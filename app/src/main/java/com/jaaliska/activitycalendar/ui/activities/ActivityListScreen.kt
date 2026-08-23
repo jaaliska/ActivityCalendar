@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.jaaliska.activitycalendar.data.csv.CsvImporter
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import java.time.Duration
@@ -32,6 +33,7 @@ import java.util.Locale
 @Composable
 fun ActivityListScreen(
     repository: ActivityRepository,
+    importer: CsvImporter,
     month: YearMonth,
     modifier: Modifier = Modifier,
 ) {
@@ -44,6 +46,7 @@ fun ActivityListScreen(
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(16.dp),
         )
+        ImportButton(importer = importer, modifier = Modifier.padding(bottom = 16.dp))
         HorizontalDivider()
 
         if (activities.isEmpty()) {

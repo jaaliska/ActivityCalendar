@@ -16,12 +16,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val repository = (application as ActivityCalendarApp).container.activityRepository
+        val container = (application as ActivityCalendarApp).container
         setContent {
             ActivityCalendarTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     ActivityListScreen(
-                        repository = repository,
+                        repository = container.activityRepository,
+                        importer = container.csvImporter,
                         month = YearMonth.now(),
                         modifier = Modifier.padding(innerPadding),
                     )
