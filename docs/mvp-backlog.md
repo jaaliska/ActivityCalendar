@@ -7,7 +7,7 @@
 | **Владелец** | Разработчик (он же продукт) |
 | **Дата** | 2026-08-23 |
 | **Версия** | 1 — вехи M1 и M2 |
-| **Связано** | [milestone-dev-plan.md](plan/milestone-dev-plan.md) — порядок работ; [data-sources.md](data-sources.md) — откуда берутся краевые случаи; [data-model-notes.md](data-model-notes.md) — поля и ключ дедупликации |
+| **Связано** | [milestone-dev-plan.md](plan/milestone-dev-plan.md) — порядок работ; [ux/information-architecture.md](ux/information-architecture.md) — экраны, переходы и состояния; [data-sources.md](data-sources.md) — откуда берутся краевые случаи; [data-model-notes.md](data-model-notes.md) — поля и ключ дедупликации |
 
 ## Как читать
 
