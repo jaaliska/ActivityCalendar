@@ -21,6 +21,9 @@ COLORS = {
     "badminton": "#C2185B", "cycling": "#0288D1", "walking": "#00897B",
     "running": "#EF6C00", "strength": "#6D4C41", "yoga": "#3949AB", "other": "#546E7A",
 }
+# The dark theme lifts the activity palette towards white; no separate palette exists.
+DARK_LIGHTEN = 0.42
+
 # (month, day) -> activity types, in start-time order. July and September are the
 # neighbouring days the August grid shows: they carry their own activities.
 ACTIVITIES = {
@@ -40,6 +43,12 @@ WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 # Material 3 theme in use. Other candidates live in docs/ux/theme.md; switching themes
 # is a matter of changing this pair.
 SEED_HUE, SEED_CHROMA = 257, 60
+
+
+def lighten(hex_color, amount=DARK_LIGHTEN):
+    """Mixes a colour towards white. How an activity colour moves into the dark theme."""
+    parts = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    return "#%02X%02X%02X" % tuple(round(v + (255 - v) * amount) for v in parts)
 
 
 def _lch_to_hex(tone_value, chroma, hue):
@@ -139,10 +148,12 @@ def cell_body(icons, acts, variant, colored):
 
 
 def day_cell(icons, day, acts, variant, colored, today=False, selected=False,
-             adjacent=False):
+             adjacent=False, key=None):
+    """key is a (month, day) pair; it lands in data-key so a page can address the cell."""
     classes = ("daycell" + (" today" if today else "") + (" selected" if selected else "")
                + (" adj" if adjacent else ""))
-    return (f'<div class="{classes}"><span class="num">{day}</span>'
+    attr = f' data-key="{key[0]}-{key[1]}"' if key else ""
+    return (f'<div class="{classes}"{attr}><span class="num">{day}</span>'
             f'<div class="icons">{cell_body(icons, acts, variant, colored)}</div></div>')
 
 
@@ -163,7 +174,7 @@ def month_grid(icons, variant="stack", colored=True, selected=None, extra_class=
                 icons, date.day, ACTIVITIES.get(key, []), variant, colored,
                 today=(key == (month, TODAY)),
                 selected=(key == selected),
-                adjacent=(date.month != month)))
+                adjacent=(date.month != month), key=key))
         rows.append('<div class="week">' + "".join(cells) + "</div>")
     return (f'<div class="grid {extra_class}"><div class="week wdrow">{head}</div>'
             + "".join(rows) + "</div>")
@@ -206,6 +217,7 @@ section.dark, .gridwrap.dark {{ --fg:{dk["fg"]}; --dim:{dk["dim"]}; --line:{dk["
 .dots i {{ width:3px; height:3px; border-radius:50%; background:currentColor;
   color:var(--dim); display:block; }}
 .grid {{ display:flex; flex-direction:column; gap:1px; }}
+.grid.fluid .daycell, .grid.fluid .wd {{ width:auto; flex:1 1 0; min-width:0; }}
 .wdrow {{ margin-bottom:2px; }}
 .wd {{ width:53px; text-align:center; font-size:10px; color:var(--dim); }}
 .hint {{ font-size:12px; color:var(--dim); margin:4px 0 12px; }}
