@@ -1,0 +1,26 @@
+Набор: monocolor_set
+Источник: SVG Repo (https://www.svgrepo.com)
+Дата загрузки: 2026-08-24
+
+Лицензия у каждого значка своя и указана на его странице отдельной строкой
+(CC0 License / PD License / CC Attribution License / MIT License).
+Считать её автоматически не получилось: сайт закрыт проверкой на бота.
+Поле "лицензия" ниже заполняется вручную по странице значка.
+
+Файл          | Значок на SVG Repo | Страница                                            | Лицензия
+--------------|--------------------|-----------------------------------------------------|----------
+strength.svg  | weight-lifting     | https://www.svgrepo.com/svg/142650/weight-lifting     | CC0
+yoga.svg      | yoga-posture       | https://www.svgrepo.com/svg/113461/yoga-posture       | CC0
+cycling.svg   | cycling            | https://www.svgrepo.com/svg/104554/cycling            | CC0
+other.svg     | своя отрисовка     | нарисована в проекте, точка на сетке 24               | своя, без
+              |                    |                                                       | обязательств
+badminton.svg | badminton          | https://www.svgrepo.com/svg/76734/badminton           | CC0
+running.svg   | running-1          | https://www.svgrepo.com/svg/482824/running-1          | PD
+walking.svg   | walking-1          | https://www.svgrepo.com/svg/482796/walking-1          | PD
+
+Что делать с этими данными дальше:
+- CC0 и PD — ничего не требуется.
+- MIT — сохранить текст лицензии и имя автора в приложении или в репозитории.
+- CC Attribution — указать автора, ссылку на лицензию и факт изменения значка.
+  Если такие в наборе есть, из этого файла собирается раздел о происхождении
+  иконок в README и экран "Licenses" в приложении.
