@@ -1,6 +1,7 @@
 """Shared pieces for the icon test pages: the chosen set, its calibration and rendering."""
 import calendar
 import io
+import math
 import os
 import re
 
@@ -35,6 +36,48 @@ MONTH_SHOWN = (2026, 8)
 TODAY = 23
 MAX_ICONS = 2
 WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+# Material 3 theme in use. Other candidates live in docs/ux/theme.md; switching themes
+# is a matter of changing this pair.
+SEED_HUE, SEED_CHROMA = 257, 60
+
+
+def _lch_to_hex(tone_value, chroma, hue):
+    """One tone of a tonal palette: keeps the hue, drops chroma until sRGB can hold it."""
+    h = math.radians(hue)
+    for c in range(int(chroma), -1, -1):
+        fy = (tone_value + 16) / 116
+        fx = fy + math.cos(h) * c / 500
+        fz = fy - math.sin(h) * c / 200
+
+        def f(t):
+            return t ** 3 if t ** 3 > 0.008856 else (t - 16 / 116) / 7.787
+
+        x, y, z = f(fx) * 0.95047, f(fy), f(fz) * 1.08883
+        lin = (x * 3.2406 + y * -1.5372 + z * -0.4986,
+               x * -0.9689 + y * 1.8758 + z * 0.0415,
+               x * 0.0557 + y * -0.2040 + z * 1.0570)
+        if all(-0.001 <= v <= 1.001 for v in lin):
+            def enc(v):
+                v = max(0.0, min(1.0, v))
+                v = v * 12.92 if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055
+                return max(0, min(255, round(v * 255)))
+            return "#%02X%02X%02X" % tuple(enc(v) for v in lin)
+    return "#000000"
+
+
+def scheme(dark=False):
+    """The Material 3 roles this preview needs, grown from the seed above."""
+    hue, chroma = SEED_HUE, SEED_CHROMA
+    p = lambda t: _lch_to_hex(t, chroma, hue)
+    sec = lambda t: _lch_to_hex(t, max(8, chroma // 3), hue)
+    n = lambda t: _lch_to_hex(t, 4, hue)
+    nv = lambda t: _lch_to_hex(t, 8, hue)
+    if dark:
+        return {"surface": n(6), "cell": n(17), "sel": sec(30), "fg": n(90),
+                "dim": nv(80), "line": nv(60), "primary": p(80)}
+    return {"surface": n(98), "cell": n(92), "sel": sec(90), "fg": n(10),
+            "dim": nv(30), "line": nv(50), "primary": p(40)}
 
 
 def normalize(svg_text):
@@ -130,9 +173,10 @@ def base_css():
     scale_css = "".join(f".ic[data-type={t}]{{transform:scale({SCALES[t]});}}" for t in TYPES)
     color_css = "".join(f".ic.colored[data-type={t}]{{color:var(--c-{t});}}" for t in TYPES)
     vars_css = "".join(f"--c-{t}:{COLORS[t]};" for t in TYPES)
+    lt, dk = scheme(), scheme(dark=True)
     return f"""
-:root {{ {vars_css} --bg:#fff; --fg:#1b1b1f; --dim:#6b6b75; --line:#e3e3e8; --cellbg:#f4f4f8;
-  --sel:#cfd0dc; }}
+:root {{ {vars_css} --bg:{lt["surface"]}; --fg:{lt["fg"]}; --dim:{lt["dim"]};
+  --line:{lt["line"]}; --cellbg:{lt["cell"]}; --sel:{lt["sel"]}; }}
 * {{ box-sizing:border-box; }}
 body {{ margin:0; padding:8px; background:var(--bg); color:var(--fg);
   font:14px/1.4 -apple-system,Roboto,system-ui,sans-serif; }}
@@ -140,8 +184,8 @@ h1 {{ font-size:18px; margin:16px 0 4px; }}
 h2 {{ font-size:12px; font-weight:600; color:var(--dim); text-transform:uppercase;
   letter-spacing:.04em; margin:18px 0 8px; }}
 section {{ padding:10px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; }}
-section.dark, .gridwrap.dark {{ --fg:#e4e2e6; --dim:#9a9aa4; --line:#33343a; --cellbg:#1d1f25;
-  --sel:#40444f; background:#111318; color:#e4e2e6; }}
+section.dark, .gridwrap.dark {{ --fg:{dk["fg"]}; --dim:{dk["dim"]}; --line:{dk["line"]};
+  --cellbg:{dk["cell"]}; --sel:{dk["sel"]}; background:{dk["surface"]}; color:{dk["fg"]}; }}
 .ic {{ display:inline-block; vertical-align:middle; color:var(--fg); }}
 .ic svg {{ width:100%; height:100%; display:block; }}
 {scale_css}
