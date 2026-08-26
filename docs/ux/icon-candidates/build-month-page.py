@@ -162,6 +162,14 @@ document.querySelectorAll('.screen').forEach(scr => {
     });
   });
 });
+// ?day=8-16 opens the page with that day already picked, for screenshots.
+const wanted = new URLSearchParams(location.search).get('day');
+if (wanted) {
+  document.querySelectorAll('.screen').forEach(scr => {
+    const cell = scr.querySelector('[data-key="' + wanted + '"]');
+    if (cell) cell.click();
+  });
+}
 document.querySelector('.fsbtn').addEventListener('click', () => {
   document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
 });
