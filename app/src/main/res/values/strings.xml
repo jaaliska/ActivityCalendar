@@ -8,6 +8,31 @@
     <string name="import_title">Import history</string>
     <string name="health_connect_title">Health Connect</string>
 
+    <string name="activity_badminton">Badminton</string>
+    <string name="activity_cycling">Cycling</string>
+    <string name="activity_running">Running</string>
+    <string name="activity_strength_training">Strength</string>
+    <string name="activity_walking">Walking</string>
+    <string name="activity_yoga">Yoga</string>
+    <string name="activity_other">Other</string>
+
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_more_activities">+%1$d</string>
+    <string name="calendar_history_start">Your history starts on %1$s</string>
+    <string name="calendar_add_older_history">Add older history from CSV</string>
+    <string name="calendar_error_title">Couldn\'t load your workouts</string>
+    <string name="calendar_error_explanation">Your data is still there — the app just couldn\'t read it.</string>
+    <string name="calendar_error_retry">Try again</string>
+
+    <string name="first_run_title">No workouts yet</string>
+    <string name="first_run_import_title">Import history from Garmin CSV</string>
+    <string name="first_run_import_subtitle">All your past workouts at once</string>
+    <string name="first_run_health_connect_title">Connect Health Connect</string>
+    <string name="first_run_health_connect_subtitle">New workouts appear automatically</string>
+    <string name="first_run_demo">Try it with demo data</string>
+
     <string name="settings_section_data">Data</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_import_title">Import from Garmin CSV</string>
