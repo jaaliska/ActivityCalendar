@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jaaliska.activitycalendar.AppContainer
 import com.jaaliska.activitycalendar.ui.calendar.CalendarScreen
+import com.jaaliska.activitycalendar.ui.calendar.CalendarViewModel
 import com.jaaliska.activitycalendar.ui.csvimport.ImportScreen
 import com.jaaliska.activitycalendar.ui.csvimport.ImportViewModel
 import com.jaaliska.activitycalendar.ui.healthconnect.HealthConnectScreen
@@ -27,9 +28,17 @@ fun AppNavHost(container: AppContainer, modifier: Modifier = Modifier) {
         modifier = modifier,
     ) {
         composable(Destination.CALENDAR.route) {
+            val calendarViewModel: CalendarViewModel = viewModel(
+                factory = viewModelFactoryOf { CalendarViewModel(container.activityRepository) },
+            )
+            val calendarState by calendarViewModel.state.collectAsState()
+
             CalendarScreen(
-                repository = container.activityRepository,
+                state = calendarState,
                 onSettingsClick = { navController.navigate(Destination.SETTINGS.route) },
+                onImportClick = { navController.navigate(Destination.IMPORT.route) },
+                onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
+                onRetry = calendarViewModel::retry,
             )
         }
         composable(Destination.SETTINGS.route) {
