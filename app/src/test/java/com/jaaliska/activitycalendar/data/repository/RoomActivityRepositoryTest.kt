@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,10 +49,26 @@ class RoomActivityRepositoryTest {
     }
 
     @Test
-    fun `observeMonth emits the same data as getMonth`() = runTest {
+    fun `observeRange emits the same data as getMonth over the same days`() = runTest {
         repository.save(FixtureActivitySource.ALL)
 
-        assertEquals(repository.getMonth(august), repository.observeMonth(august).first())
+        val observed = repository
+            .observeRange(august.atDay(1), august.plusMonths(1).atDay(1))
+            .first()
+
+        assertEquals(repository.getMonth(august), observed)
+    }
+
+    @Test
+    fun `observeHistoryStart is null until something is stored`() = runTest {
+        assertNull(repository.observeHistoryStart().first())
+
+        repository.save(FixtureActivitySource.ALL)
+
+        assertEquals(
+            FixtureActivitySource.ALL.minOf { it.startTimeLocal }.toLocalDate(),
+            repository.observeHistoryStart().first(),
+        )
     }
 
     @Test

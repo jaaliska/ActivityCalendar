@@ -25,6 +25,10 @@ interface ActivityDao {
     )
     suspend fun getInRange(fromInclusive: String, toExclusive: String): List<ActivityEntity>
 
+    /** Emits the start time of the oldest stored activity, `null` while nothing is stored. */
+    @Query("SELECT MIN(startTimeLocal) FROM activities")
+    fun observeEarliestStart(): Flow<String?>
+
     /**
      * Inserts [activities], skipping those whose start time and type are already stored.
      *
