@@ -35,6 +35,8 @@ fun AppNavHost(container: AppContainer, modifier: Modifier = Modifier) {
 
             CalendarScreen(
                 state = calendarState,
+                anchor = calendarViewModel.anchor,
+                onMonthSettled = calendarViewModel::showMonth,
                 onSettingsClick = { navController.navigate(Destination.SETTINGS.route) },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },

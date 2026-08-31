@@ -15,78 +15,118 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 
-/** Reads the month the calendar shows; the shown month itself starts moving in block 6. */
+/**
+ * Reads the months the calendar pages through. Which month is on screen belongs to the pager;
+ * this only answers what is in the three months around it.
+ */
 class CalendarViewModel(
     private val repository: ActivityRepository,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
 
-    private val month: YearMonth = YearMonth.now(clock)
+    /** The month the calendar opens on, and the month `Today` returns to. */
+    val anchor: YearMonth = YearMonth.now(clock)
 
-    private val attempts = MutableStateFlow(0)
+    private val today: LocalDate = LocalDate.now(clock)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val state: StateFlow<CalendarUiState> = attempts
-        .flatMapLatest { readMonth() }
+    private val requests = MutableStateFlow(Request(anchor, attempt = 0))
+
+    val state: StateFlow<CalendarUiState> = reads()
+        .scan(CalendarUiState.Calendar(today) as CalendarUiState, ::merge)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = monthState(activities = emptyList(), historyStart = null),
+            initialValue = CalendarUiState.Calendar(today),
         )
 
-    /** Reads the month again after a failure, without restarting the app. */
-    fun retry() {
-        attempts.value += 1
+    /** Says which month the pager has settled on, so its neighbours are read as well. */
+    fun showMonth(month: YearMonth) {
+        requests.value = requests.value.copy(month = month)
     }
 
-    private fun readMonth(): Flow<CalendarUiState> =
-        combine(stored(), slowReadTicker()) { state, slow ->
-            state ?: monthState(emptyList(), historyStart = null, reading = slow)
-        }.catch { emit(CalendarUiState.Failed(month)) }
+    /** Reads the months again after a failure, without restarting the app. */
+    fun retry() {
+        requests.value = requests.value.copy(attempt = requests.value.attempt + 1)
+    }
 
-    /** The state the database dictates; null until it has answered, so the grid can be drawn. */
-    private fun stored(): Flow<CalendarUiState?> {
-        val answers: Flow<CalendarUiState?> = combine(
-            repository.observeRange(month.gridStart(), month.gridEndExclusive()),
+    /**
+     * Keeps the months already on screen while the next ones are being read: a paged-to month
+     * would otherwise blink through an empty grid on every swipe.
+     */
+    private fun merge(previous: CalendarUiState, read: Read): CalendarUiState = when {
+        read.answer != null -> read.answer
+        previous is CalendarUiState.Calendar -> previous.copy(reading = read.slow)
+        else -> previous
+    }
+
+    // A StateFlow already drops repeats, so paging back to a month that is already read
+    // does not start the read again.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun reads(): Flow<Read> = requests
+        .flatMapLatest { request ->
+            combine(
+                stored(request.month)
+                    .catch { emit(CalendarUiState.Failed(request.month)) }
+                    .onStart { emit(null) },
+                slowReadTicker(),
+            ) { answer, slow -> Read(answer, slow) }
+        }
+
+    private fun stored(month: YearMonth): Flow<CalendarUiState?> {
+        val window = month.minusMonths(1)..month.plusMonths(1)
+        return combine(
+            repository.observeRange(
+                window.start.gridStart(),
+                window.endInclusive.gridEndExclusive(),
+            ),
             repository.observeHistoryStart(),
         ) { activities, historyStart ->
             if (historyStart == null) {
                 CalendarUiState.NoData
             } else {
-                monthState(activities, historyStart)
+                calendar(window, activities, historyStart)
             }
         }
-        return answers.onStart { emit(null) }
     }
 
-    private fun monthState(
+    private fun calendar(
+        window: ClosedRange<YearMonth>,
         activities: List<Activity>,
-        historyStart: LocalDate?,
-        reading: Boolean = false,
-    ): CalendarUiState.Month {
+        historyStart: LocalDate,
+    ): CalendarUiState.Calendar {
         val byDay = activities.groupBy { it.startTimeLocal.toLocalDate() }
-        val today = LocalDate.now(clock)
-        return CalendarUiState.Month(
-            month = month,
-            weeks = month.gridWeeks().map { week ->
-                week.map { date ->
-                    CalendarDay(
-                        date = date,
-                        inMonth = YearMonth.from(date) == month,
-                        isToday = date == today,
-                        types = byDay[date].orEmpty().map { it.type },
-                    )
-                }
-            },
-            historyStart = historyStart?.takeIf { month.atEndOfMonth() < it },
-            reading = reading,
+        val months = generateSequence(window.start) { it.plusMonths(1) }
+            .takeWhile { it <= window.endInclusive }
+        return CalendarUiState.Calendar(
+            today = today,
+            pages = months.associateWith { page(it, byDay, historyStart) },
         )
     }
+
+    private fun page(
+        month: YearMonth,
+        byDay: Map<LocalDate, List<Activity>>,
+        historyStart: LocalDate,
+    ) = MonthPage(
+        month = month,
+        weeks = month.gridWeeks().map { week ->
+            week.map { date ->
+                CalendarDay(
+                    date = date,
+                    inMonth = YearMonth.from(date) == month,
+                    isToday = date == today,
+                    types = byDay[date].orEmpty().map { it.type },
+                )
+            }
+        },
+        historyStart = historyStart.takeIf { month.atEndOfMonth() < it },
+    )
 
     // A local read takes milliseconds. The progress line exists for the read that does not.
     private fun slowReadTicker(): Flow<Boolean> = flow {
@@ -94,6 +134,12 @@ class CalendarViewModel(
         delay(SLOW_READ_MILLIS)
         emit(true)
     }
+
+    /** What the state is being read for: a month to show, and which attempt at it this is. */
+    private data class Request(val month: YearMonth, val attempt: Int)
+
+    /** One step of a read: the answer if it has arrived, and whether it is taking long. */
+    private data class Read(val answer: CalendarUiState?, val slow: Boolean)
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
