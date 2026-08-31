@@ -7,4 +7,16 @@
     <string name="settings_title">Settings</string>
     <string name="import_title">Import history</string>
     <string name="health_connect_title">Health Connect</string>
+
+    <string name="settings_section_data">Data</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_import_title">Import from Garmin CSV</string>
+    <string name="settings_import_last">Last import: %1$s</string>
+    <string name="settings_import_never">No imports yet</string>
+    <string name="settings_health_connect_title">Health Connect</string>
+    <string name="settings_health_connect_not_connected">Not connected</string>
+    <string name="settings_demo_title">Demo data</string>
+    <string name="settings_demo_subtitle">See the app without your own workouts</string>
+    <string name="settings_color_scheme_title">Color scheme</string>
+    <string name="settings_color_scheme_blue">Blue</string>
 </resources>
