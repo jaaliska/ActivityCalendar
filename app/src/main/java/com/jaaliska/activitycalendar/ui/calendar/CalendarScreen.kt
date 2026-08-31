@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.jaaliska.activitycalendar.R
-import com.jaaliska.activitycalendar.data.csv.CsvImporter
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.ui.activities.ActivityListScreen
 import java.time.YearMonth
@@ -21,7 +20,6 @@ import java.time.YearMonth
 @Composable
 fun CalendarScreen(
     repository: ActivityRepository,
-    importer: CsvImporter,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -43,7 +41,6 @@ fun CalendarScreen(
     ) { innerPadding ->
         ActivityListScreen(
             repository = repository,
-            importer = importer,
             month = YearMonth.now(),
             modifier = Modifier.padding(innerPadding),
         )

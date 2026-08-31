@@ -25,11 +25,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
+import com.jaaliska.activitycalendar.ui.UI_DATE
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
 import com.jaaliska.activitycalendar.ui.theme.SchemeSwatches
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun SettingsScreen(
@@ -83,7 +82,7 @@ private fun importSubtitle(lastImport: LocalDate?): String =
     if (lastImport == null) {
         stringResource(R.string.settings_import_never)
     } else {
-        stringResource(R.string.settings_import_last, lastImport.format(IMPORT_DATE_FORMAT))
+        stringResource(R.string.settings_import_last, lastImport.format(UI_DATE))
     }
 
 @Composable
@@ -167,6 +166,3 @@ private fun RowDivider() {
 }
 
 private const val BLUE_SCHEME = 1
-
-private val IMPORT_DATE_FORMAT: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH)

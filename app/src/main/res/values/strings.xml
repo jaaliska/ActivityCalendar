@@ -19,4 +19,34 @@
     <string name="settings_demo_subtitle">See the app without your own workouts</string>
     <string name="settings_color_scheme_title">Color scheme</string>
     <string name="settings_color_scheme_blue">Blue</string>
+
+    <string name="import_intro">Add your past workouts from a CSV file exported on Garmin Connect.</string>
+    <string name="import_choose_file">Choose file</string>
+    <string name="import_choose_another_file">Choose another file</string>
+    <string name="import_reading">Reading file\u2026</string>
+    <string name="import_complete">Import complete</string>
+    <string name="import_added">Added</string>
+    <string name="import_duplicates">Duplicates</string>
+    <string name="import_skipped">Skipped</string>
+    <string name="import_period">%1$s \u2013 %2$s</string>
+    <string name="import_error_not_garmin">This file doesn\'t look like a Garmin export</string>
+    <string name="import_error_unreadable">This file could not be read</string>
+    <string name="import_error_unchanged">Nothing was changed.</string>
+    <string name="import_error_columns">Expected columns for date, activity type and duration were not found.</string>
+    <string name="import_error_open">The file could not be opened. It may have been moved or deleted.</string>
+
+    <string name="instruction_title">How to export CSV from Garmin Connect</string>
+    <string name="instruction_step_open">Open connect.garmin.com in a desktop browser and sign in.</string>
+    <string name="instruction_step_activities">Go to Activities, then All Activities.</string>
+    <string name="instruction_step_scroll">Scroll the list down to your oldest activity.</string>
+    <string name="instruction_step_export">Click Export CSV in the top right corner.</string>
+    <string name="instruction_step_save">Save the file, then transfer it to this phone.</string>
+    <string name="instruction_warning_scroll">Only activities loaded on screen are exported. If you don\'t scroll to the end, the file will be incomplete.</string>
+    <string name="instruction_warning_metric">Metric profile only \u2014 distances must be in kilometres.</string>
+    <string name="instruction_warning_english">English Garmin Connect interface only \u2014 column names in other languages aren\'t recognised.</string>
+
+    <plurals name="import_skipped_rows">
+        <item quantity="one">%1$d row had no date or duration and was skipped.</item>
+        <item quantity="other">%1$d rows had no date or duration and were skipped.</item>
+    </plurals>
 </resources>
