@@ -2,6 +2,7 @@
     <string name="app_name">Activity Calendar</string>
 
     <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
     <string name="action_settings">Settings</string>
 
     <string name="settings_title">Settings</string>
@@ -19,6 +20,8 @@
     <string name="calendar_previous_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>
     <string name="calendar_today">Today</string>
+    <string name="calendar_previous_year">Previous year</string>
+    <string name="calendar_next_year">Next year</string>
     <string name="calendar_more_activities">+%1$d</string>
     <string name="calendar_history_start">Your history starts on %1$s</string>
     <string name="calendar_add_older_history">Add older history from CSV</string>

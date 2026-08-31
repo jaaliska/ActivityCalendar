@@ -35,6 +35,8 @@ class CalendarViewModelTest {
     private val clock: Clock =
         Clock.fixed(LocalDate.of(2026, 8, 23).atStartOfDay(ZONE).toInstant(), ZONE)
 
+    private val august = YearMonth.of(2026, 8)
+
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
 
@@ -42,7 +44,7 @@ class CalendarViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun `an empty database asks for data instead of showing a month`() = runTest(dispatcher) {
+    fun `an empty database asks for data instead of showing a calendar`() = runTest(dispatcher) {
         assertEquals(CalendarUiState.NoData, stateOf(FakeRepository()))
     }
 
@@ -54,28 +56,28 @@ class CalendarViewModelTest {
                 activity("2026-08-16T12:05:00", ActivityType.STRENGTH_TRAINING),
                 activity("2026-07-30T18:00:00", ActivityType.BADMINTON),
             ),
-            historyStart = LocalDate.of(2026, 3, 11),
+            historyStart = HISTORY_START,
         )
 
-        val state = month(repository)
+        val page = calendar(repository).page(august)
 
-        assertEquals(YearMonth.of(2026, 8), state.month)
-        assertEquals(6, state.weeks.size)
+        assertEquals(august, page.month)
+        assertEquals(6, page.weeks.size)
         assertEquals(
             listOf(ActivityType.RUNNING, ActivityType.STRENGTH_TRAINING),
-            state.day(LocalDate.of(2026, 8, 16)).types,
+            page.day(LocalDate.of(2026, 8, 16)).types,
         )
-        assertTrue(state.day(LocalDate.of(2026, 8, 17)).types.isEmpty())
+        assertTrue(page.day(LocalDate.of(2026, 8, 17)).types.isEmpty())
     }
 
     @Test
     fun `a day of a neighbouring month keeps its own activities`() = runTest(dispatcher) {
         val repository = FakeRepository(
             activities = listOf(activity("2026-07-30T18:00:00", ActivityType.BADMINTON)),
-            historyStart = LocalDate.of(2026, 3, 11),
+            historyStart = HISTORY_START,
         )
 
-        val july30 = month(repository).day(LocalDate.of(2026, 7, 30))
+        val july30 = calendar(repository).page(august).day(LocalDate.of(2026, 7, 30))
 
         assertEquals(listOf(ActivityType.BADMINTON), july30.types)
         assertEquals(false, july30.inMonth)
@@ -83,33 +85,95 @@ class CalendarViewModelTest {
 
     @Test
     fun `today is marked, other days are not`() = runTest(dispatcher) {
-        val state = month(FakeRepository(historyStart = LocalDate.of(2026, 3, 11)))
+        val page = calendar(FakeRepository(historyStart = HISTORY_START)).page(august)
 
-        assertTrue(state.day(LocalDate.of(2026, 8, 23)).isToday)
-        assertEquals(1, state.weeks.flatten().count { it.isToday })
+        assertTrue(page.day(LocalDate.of(2026, 8, 23)).isToday)
+        assertEquals(1, page.weeks.flatten().count { it.isToday })
+    }
+
+    @Test
+    fun `the months around the shown one are read too`() = runTest(dispatcher) {
+        val state = calendar(FakeRepository(historyStart = HISTORY_START))
+
+        assertEquals(
+            setOf(YearMonth.of(2026, 7), august, YearMonth.of(2026, 9)),
+            state.pages.keys,
+        )
+    }
+
+    @Test
+    fun `a month too far to have been read is drawn empty, not with a neighbour's data`() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(
+                activities = listOf(activity("2026-08-16T07:20:00", ActivityType.RUNNING)),
+                historyStart = HISTORY_START,
+            )
+
+            val far = calendar(repository).page(YearMonth.of(2021, 3))
+
+            assertEquals(YearMonth.of(2021, 3), far.month)
+            assertEquals(6, far.weeks.size)
+            assertTrue(far.weeks.flatten().all { it.types.isEmpty() })
+        }
+
+    @Test
+    fun `paging to another month reads that month`() = runTest(dispatcher) {
+        val repository = FakeRepository(
+            activities = listOf(activity("2021-03-04T07:20:00", ActivityType.YOGA)),
+            historyStart = LocalDate.of(2019, 1, 1),
+        )
+        val viewModel = CalendarViewModel(repository, clock)
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+
+        viewModel.showMonth(YearMonth.of(2021, 3))
+        advanceUntilIdle()
+
+        val page = (viewModel.state.value as CalendarUiState.Calendar).page(YearMonth.of(2021, 3))
+        assertEquals(listOf(ActivityType.YOGA), page.day(LocalDate.of(2021, 3, 4)).types)
+    }
+
+    @Test
+    fun `a flurry of paging ends on the last month asked for`() = runTest(dispatcher) {
+        val repository = FakeRepository(
+            activities = listOf(activity("2021-03-04T07:20:00", ActivityType.YOGA)),
+            historyStart = LocalDate.of(2019, 1, 1),
+        )
+        val viewModel = CalendarViewModel(repository, clock)
+        backgroundScope.launch { viewModel.state.collect {} }
+
+        (1..12).forEach { viewModel.showMonth(august.minusMonths(it.toLong())) }
+        viewModel.showMonth(YearMonth.of(2021, 3))
+        advanceUntilIdle()
+
+        val state = viewModel.state.value as CalendarUiState.Calendar
+        assertEquals(
+            setOf(YearMonth.of(2021, 2), YearMonth.of(2021, 3), YearMonth.of(2021, 4)),
+            state.pages.keys,
+        )
     }
 
     @Test
     fun `a month inside the history says nothing about where it starts`() = runTest(dispatcher) {
-        val state = month(FakeRepository(historyStart = LocalDate.of(2026, 3, 11)))
+        val state = calendar(FakeRepository(historyStart = HISTORY_START))
 
-        assertNull(state.historyStart)
+        assertNull(state.page(august).historyStart)
     }
 
     @Test
     fun `a month earlier than the history names the day it starts on`() = runTest(dispatcher) {
-        val state = month(FakeRepository(historyStart = LocalDate.of(2026, 9, 1)))
+        val state = calendar(FakeRepository(historyStart = LocalDate.of(2026, 9, 1)))
 
-        assertEquals(LocalDate.of(2026, 9, 1), state.historyStart)
+        assertEquals(LocalDate.of(2026, 9, 1), state.page(august).historyStart)
     }
 
     @Test
     fun `a failed read reports itself and keeps naming the month`() = runTest(dispatcher) {
-        assertEquals(CalendarUiState.Failed(YearMonth.of(2026, 8)), stateOf(FailingRepository()))
+        assertEquals(CalendarUiState.Failed(august), stateOf(FailingRepository()))
     }
 
     @Test
-    fun `retry after a failure shows the month`() = runTest(dispatcher) {
+    fun `retry after a failure shows the calendar`() = runTest(dispatcher) {
         val viewModel = CalendarViewModel(
             FailingRepository(thenReturns = FakeRepository(historyStart = HISTORY_START)),
             clock,
@@ -121,7 +185,7 @@ class CalendarViewModelTest {
         viewModel.retry()
         advanceUntilIdle()
 
-        assertTrue(viewModel.state.value is CalendarUiState.Month)
+        assertTrue(viewModel.state.value is CalendarUiState.Calendar)
     }
 
     /** The state the screen ends up with once the repository has answered. */
@@ -132,10 +196,10 @@ class CalendarViewModelTest {
         return viewModel.state.value
     }
 
-    private fun TestScope.month(repository: ActivityRepository): CalendarUiState.Month =
-        stateOf(repository) as CalendarUiState.Month
+    private fun TestScope.calendar(repository: ActivityRepository): CalendarUiState.Calendar =
+        stateOf(repository) as CalendarUiState.Calendar
 
-    private fun CalendarUiState.Month.day(date: LocalDate): CalendarDay =
+    private fun MonthPage.day(date: LocalDate): CalendarDay =
         weeks.flatten().single { it.date == date }
 
     /** Answers straight away, the way a local database does. */

@@ -2,12 +2,16 @@ package com.jaaliska.activitycalendar.ui.calendar
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,8 +22,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
 import com.jaaliska.activitycalendar.ui.UI_MONTH
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -34,6 +49,8 @@ import java.time.YearMonth
 @Composable
 fun CalendarScreen(
     state: CalendarUiState,
+    anchor: YearMonth,
+    onMonthSettled: (YearMonth) -> Unit,
     onSettingsClick: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
@@ -73,22 +90,83 @@ fun CalendarScreen(
                     LoadErrorState(onRetry = onRetry)
                 }
 
-                is CalendarUiState.Month -> {
-                    MonthRow(month = state.month, reading = state.reading)
-                    MonthGrid(
-                        weeks = state.weeks,
-                        modifier = Modifier.padding(horizontal = 6.dp),
-                    )
-                    state.historyStart?.let { HistoryStart(it, onImportClick) }
-                }
+                is CalendarUiState.Calendar -> MonthPager(
+                    state = state,
+                    anchor = anchor,
+                    onMonthSettled = onMonthSettled,
+                    onImportClick = onImportClick,
+                )
             }
         }
     }
 }
 
-/** Month name with the paging controls; they start paging in block 6. */
+/** The months, one page each, with the row that names and moves them. */
 @Composable
-private fun MonthRow(month: YearMonth, reading: Boolean = false) {
+private fun MonthPager(
+    state: CalendarUiState.Calendar,
+    anchor: YearMonth,
+    onMonthSettled: (YearMonth) -> Unit,
+    onImportClick: () -> Unit,
+) {
+    val pagerState = rememberPagerState(initialPage = ANCHOR_PAGE) { PAGE_COUNT }
+    val scope = rememberCoroutineScope()
+    val shownMonth by remember(anchor) {
+        derivedStateOf { monthAt(pagerState.currentPage, anchor) }
+    }
+    var pickerShown by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(pagerState, anchor) {
+        snapshotFlow { pagerState.settledPage }
+            .collect { page -> onMonthSettled(monthAt(page, anchor)) }
+    }
+
+    MonthRow(
+        month = shownMonth,
+        reading = state.reading,
+        onPrevious = { scope.launch { pagerState.animateScrollToPage(pagerState.targetPage - 1) } },
+        onNext = { scope.launch { pagerState.animateScrollToPage(pagerState.targetPage + 1) } },
+        onPickMonth = { pickerShown = true },
+        onToday = { scope.launch { pagerState.animateScrollToPage(ANCHOR_PAGE) } },
+    )
+
+    HorizontalPager(
+        state = pagerState,
+        verticalAlignment = Alignment.Top,
+        beyondViewportPageCount = 1,
+    ) { page ->
+        val monthPage = state.page(monthAt(page, anchor))
+        Column {
+            MonthGrid(
+                weeks = monthPage.weeks,
+                modifier = Modifier.padding(horizontal = 6.dp),
+            )
+            monthPage.historyStart?.let { HistoryStart(it, onImportClick) }
+        }
+    }
+
+    if (pickerShown) {
+        MonthYearDialog(
+            shown = shownMonth,
+            onPick = { month ->
+                pickerShown = false
+                scope.launch { pagerState.scrollToPage(pageOf(month, anchor)) }
+            },
+            onDismiss = { pickerShown = false },
+        )
+    }
+}
+
+/** Month name with the controls that move the calendar through time. */
+@Composable
+private fun MonthRow(
+    month: YearMonth,
+    reading: Boolean = false,
+    onPrevious: () -> Unit = {},
+    onNext: () -> Unit = {},
+    onPickMonth: () -> Unit = {},
+    onToday: () -> Unit = {},
+) {
     Column {
         Row(
             modifier = Modifier
@@ -96,23 +174,38 @@ private fun MonthRow(month: YearMonth, reading: Boolean = false) {
                 .padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = {}) {
+            IconButton(onClick = onPrevious) {
                 Icon(
                     painter = painterResource(R.drawable.ic_chevron_left),
                     contentDescription = stringResource(R.string.calendar_previous_month),
                 )
             }
-            Text(
-                text = month.format(UI_MONTH),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            IconButton(onClick = {}) {
+            TextButton(onClick = onPickMonth) {
+                Box(contentAlignment = Alignment.Center) {
+                    // Holds the width of the longest month name, so neither the arrow next
+                    // to it nor the grid below it moves as the months go by.
+                    Text(
+                        text = WIDEST_MONTH,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        modifier = Modifier.alpha(0f),
+                    )
+                    Text(
+                        text = month.format(UI_MONTH),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                    )
+                }
+            }
+            IconButton(onClick = onNext) {
                 Icon(
                     painter = painterResource(R.drawable.ic_chevron_right),
                     contentDescription = stringResource(R.string.calendar_next_month),
                 )
             }
-            TextButton(onClick = {}, modifier = Modifier.padding(start = 8.dp)) {
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick = onToday) {
                 Text(stringResource(R.string.calendar_today))
             }
         }
@@ -146,3 +239,6 @@ private fun HistoryStart(start: LocalDate, onImportClick: () -> Unit) {
         )
     }
 }
+
+// The longest month name the row has to hold; the digits stand in for any year.
+private const val WIDEST_MONTH = "September 0000"
