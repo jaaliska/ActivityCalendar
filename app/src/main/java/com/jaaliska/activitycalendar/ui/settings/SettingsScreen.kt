@@ -1,0 +1,168 @@
+package com.jaaliska.activitycalendar.ui.settings
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.jaaliska.activitycalendar.R
+import com.jaaliska.activitycalendar.ui.UI_DATE
+import com.jaaliska.activitycalendar.ui.components.DetailTopBar
+import com.jaaliska.activitycalendar.ui.theme.SchemeSwatches
+import java.time.LocalDate
+
+@Composable
+fun SettingsScreen(
+    state: SettingsUiState,
+    onBack: () -> Unit,
+    onImportClick: () -> Unit,
+    onHealthConnectClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = { DetailTopBar(title = stringResource(R.string.settings_title), onBack = onBack) },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            SectionHeader(stringResource(R.string.settings_section_data))
+
+            SettingsRow(
+                title = stringResource(R.string.settings_import_title),
+                subtitle = importSubtitle(state.lastImport),
+                onClick = onImportClick,
+            )
+            RowDivider()
+            SettingsRow(
+                title = stringResource(R.string.settings_health_connect_title),
+                subtitle = stringResource(R.string.settings_health_connect_not_connected),
+                onClick = onHealthConnectClick,
+            )
+            RowDivider()
+            SettingsRow(
+                title = stringResource(R.string.settings_demo_title),
+                subtitle = stringResource(R.string.settings_demo_subtitle),
+            )
+
+            SectionHeader(stringResource(R.string.settings_section_appearance))
+
+            SettingsRow(
+                title = stringResource(R.string.settings_color_scheme_title),
+                subtitle = stringResource(R.string.settings_color_scheme_blue),
+                trailing = { SchemeCircles(selected = BLUE_SCHEME) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun importSubtitle(lastImport: LocalDate?): String =
+    if (lastImport == null) {
+        stringResource(R.string.settings_import_never)
+    } else {
+        stringResource(R.string.settings_import_last, lastImport.format(UI_DATE))
+    }
+
+@Composable
+private fun SectionHeader(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.BottomStart,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+    }
+}
+
+@Composable
+private fun SettingsRow(
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp)
+            .then(if (onClick == null) Modifier else Modifier.clickable(onClick = onClick))
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        when {
+            trailing != null -> trailing()
+            onClick != null -> Icon(
+                painter = painterResource(R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SchemeCircles(selected: Int) {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        SchemeSwatches.forEachIndexed { index, swatch ->
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(color = swatch, shape = CircleShape)
+                    .then(
+                        if (index != selected) {
+                            Modifier
+                        } else {
+                            Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                        },
+                    ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowDivider() {
+    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+}
+
+private const val BLUE_SCHEME = 1
