@@ -1,6 +1,7 @@
 package com.jaaliska.activitycalendar.domain.calendar
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -41,9 +42,25 @@ class MonthWindowTest {
     }
 
     @Test
-    fun `a month starting on a Monday starts the grid on its own first day`() {
-        // 1 June 2026 is a Monday: nothing of May is shown.
-        assertEquals(LocalDate.of(2026, 6, 1), YearMonth.of(2026, 6).gridStart())
+    fun `a month starting on a Monday opens with the last week of the previous one`() {
+        // 1 June 2026 is a Monday.
+        assertEquals(LocalDate.of(2026, 5, 25), YearMonth.of(2026, 6).gridStart())
+    }
+
+    @Test
+    fun `a month starting on a Tuesday opens with the last week of the previous one`() {
+        // 1 September 2026 is a Tuesday.
+        assertEquals(LocalDate.of(2026, 8, 24), YearMonth.of(2026, 9).gridStart())
+    }
+
+    @Test
+    fun `the grid holds every day of the month it draws`() {
+        var month = YearMonth.of(2026, 1)
+        repeat(MONTHS_OF_EVERY_LENGTH_AND_FIRST_DAY) {
+            assertTrue(month.toString(), month.gridStart() <= month.atDay(1))
+            assertTrue(month.toString(), month.atEndOfMonth() < month.gridEndExclusive())
+            month = month.plusMonths(1)
+        }
     }
 
     @Test
@@ -53,5 +70,10 @@ class MonthWindowTest {
 
         assertEquals(weeks.first().first(), month.gridStart())
         assertEquals(weeks.last().last().plusDays(1), month.gridEndExclusive())
+    }
+
+    private companion object {
+        /** Enough months in a row for every month length to meet every possible first day. */
+        const val MONTHS_OF_EVERY_LENGTH_AND_FIRST_DAY = 12 * 28
     }
 }

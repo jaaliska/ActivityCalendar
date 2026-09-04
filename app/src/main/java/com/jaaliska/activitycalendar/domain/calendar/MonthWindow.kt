@@ -10,9 +10,14 @@ const val WEEKS_IN_GRID = 6
 
 private const val DAYS_IN_WEEK = 7
 
-/** The first day the grid of [month] shows: the Monday of the week its 1st falls into. */
-fun YearMonth.gridStart(): LocalDate =
-    atDay(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+/**
+ * The first day the grid of [month] shows: the Monday of the week its 1st falls into, or the
+ * Monday a week earlier when the 1st is itself a Monday or a Tuesday.
+ */
+fun YearMonth.gridStart(): LocalDate {
+    val monday = atDay(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    return if (atDay(1).dayOfWeek <= DayOfWeek.TUESDAY) monday.minusWeeks(1) else monday
+}
 
 /** The day after the last one the grid of [month] shows. */
 fun YearMonth.gridEndExclusive(): LocalDate =
