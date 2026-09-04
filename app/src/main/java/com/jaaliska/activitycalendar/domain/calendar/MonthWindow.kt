@@ -1,4 +1,4 @@
-package com.jaaliska.activitycalendar.ui.calendar
+package com.jaaliska.activitycalendar.domain.calendar
 
 import java.time.DayOfWeek
 import java.time.LocalDate

@@ -39,7 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
-import com.jaaliska.activitycalendar.data.csv.CsvImportReport
+import com.jaaliska.activitycalendar.domain.usecase.ImportReport
 import com.jaaliska.activitycalendar.ui.UI_DATE
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
 
@@ -150,7 +150,7 @@ private fun ProgressCard(fileName: String) {
 }
 
 @Composable
-private fun ReportCard(report: CsvImportReport) {
+private fun ReportCard(report: ImportReport) {
     Card {
         CardHeader(
             icon = R.drawable.ic_check_circle,

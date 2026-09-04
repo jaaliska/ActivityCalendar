@@ -1,6 +1,7 @@
 package com.jaaliska.activitycalendar.ui.calendar
 
 import com.jaaliska.activitycalendar.domain.ActivityType
+import com.jaaliska.activitycalendar.domain.calendar.gridWeeks
 import java.time.LocalDate
 import java.time.YearMonth
 

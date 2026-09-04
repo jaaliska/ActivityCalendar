@@ -3,6 +3,7 @@ package com.jaaliska.activitycalendar.data.file
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.jaaliska.activitycalendar.ui.file.FileSource
 import java.io.FileNotFoundException
 import java.io.InputStream
 

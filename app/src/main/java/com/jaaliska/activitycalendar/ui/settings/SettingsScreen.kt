@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
-import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
+import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
 import com.jaaliska.activitycalendar.ui.components.OnResume
 import com.jaaliska.activitycalendar.ui.healthconnect.timeAgo

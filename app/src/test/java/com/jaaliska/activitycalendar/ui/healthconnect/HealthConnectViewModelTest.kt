@@ -5,12 +5,13 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.jaaliska.activitycalendar.data.db.AppDatabase
-import com.jaaliska.activitycalendar.data.healthconnect.FakeHealthConnectSource
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectAvailability
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectSyncer
-import com.jaaliska.activitycalendar.data.healthconnect.healthConnectActivity
+import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSource
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectAvailability
+import com.jaaliska.activitycalendar.domain.healthconnect.healthConnectActivity
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
-import com.jaaliska.activitycalendar.data.settings.HealthConnectSyncState
+import com.jaaliska.activitycalendar.data.settings.DataStoreHealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.usecase.SyncHealthConnect
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -48,20 +49,20 @@ class HealthConnectViewModelTest {
 
     private lateinit var database: AppDatabase
     private lateinit var syncState: HealthConnectSyncState
-    private lateinit var syncer: HealthConnectSyncer
+    private lateinit var syncHealthConnect: SyncHealthConnect
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        syncState = HealthConnectSyncState(
+        syncState = DataStoreHealthConnectSyncState(
             PreferenceDataStoreFactory.create(
                 scope = CoroutineScope(Job() + Dispatchers.IO),
                 produceFile = { temporaryFolder.newFile("sync.preferences_pb") },
             ),
         )
-        syncer = HealthConnectSyncer(
+        syncHealthConnect = SyncHealthConnect(
             source = source,
             repository = RoomActivityRepository(database),
             syncState = syncState,
@@ -198,7 +199,7 @@ class HealthConnectViewModelTest {
 
     private fun viewModel() = HealthConnectViewModel(
         source = source,
-        syncer = syncer,
+        syncHealthConnect = syncHealthConnect,
         syncState = syncState,
         clock = clock,
     )

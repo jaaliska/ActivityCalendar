@@ -8,6 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.jaaliska.activitycalendar.ActivityCalendarApp
+import com.jaaliska.activitycalendar.domain.usecase.SyncResult
 import java.time.Duration
 
 /** Synchronises with Health Connect while the app is not open. */
@@ -24,7 +25,7 @@ class HealthConnectSyncWorker(
             WorkManager.getInstance(applicationContext).cancelUniqueWork(REPEATING_WORK)
             return Result.success()
         }
-        return when (val result = container.healthConnectSyncer.sync()) {
+        return when (val result = container.syncHealthConnect()) {
             is SyncResult.Synced -> {
                 Log.i(TAG, "stored ${result.added} new activities")
                 Result.success()

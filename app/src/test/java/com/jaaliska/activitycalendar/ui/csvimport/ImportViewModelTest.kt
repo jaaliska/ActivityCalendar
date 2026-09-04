@@ -5,11 +5,13 @@ import android.net.Uri
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import com.jaaliska.activitycalendar.data.csv.CsvImporter
+import com.jaaliska.activitycalendar.data.csv.GarminCsvParser
 import com.jaaliska.activitycalendar.data.db.AppDatabase
-import com.jaaliska.activitycalendar.data.file.FileSource
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
-import com.jaaliska.activitycalendar.data.settings.ImportHistory
+import com.jaaliska.activitycalendar.data.settings.DataStoreImportHistory
+import com.jaaliska.activitycalendar.domain.ImportHistory
+import com.jaaliska.activitycalendar.domain.usecase.ImportActivities
+import com.jaaliska.activitycalendar.ui.file.FileSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,7 +56,7 @@ class ImportViewModelTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
         repository = RoomActivityRepository(database)
-        importHistory = ImportHistory(
+        importHistory = DataStoreImportHistory(
             PreferenceDataStoreFactory.create(
                 scope = CoroutineScope(Job() + Dispatchers.IO),
                 produceFile = { temporaryFolder.newFile("settings.preferences_pb") },
@@ -163,10 +165,13 @@ class ImportViewModelTest {
         fileSource: FileSource,
         clock: Clock = clockAt(LocalDate.of(2026, 8, 27)),
     ) = ImportViewModel(
-        importer = CsvImporter(repository),
+        importActivities = ImportActivities(
+            repository = repository,
+            parser = GarminCsvParser(),
+            importHistory = importHistory,
+            clock = clock,
+        ),
         fileSource = fileSource,
-        importHistory = importHistory,
-        clock = clock,
         ioDispatcher = dispatcher,
     )
 

@@ -1,6 +1,6 @@
 package com.jaaliska.activitycalendar.ui.csvimport
 
-import com.jaaliska.activitycalendar.data.csv.CsvImportReport
+import com.jaaliska.activitycalendar.domain.usecase.ImportReport
 
 /** Where the import of a CSV file currently is. */
 sealed interface ImportUiState {
@@ -9,7 +9,7 @@ sealed interface ImportUiState {
 
     data class Running(val fileName: String) : ImportUiState
 
-    data class Done(val report: CsvImportReport) : ImportUiState
+    data class Done(val report: ImportReport) : ImportUiState
 
     data class Failed(val fileName: String, val reason: Reason) : ImportUiState {
 

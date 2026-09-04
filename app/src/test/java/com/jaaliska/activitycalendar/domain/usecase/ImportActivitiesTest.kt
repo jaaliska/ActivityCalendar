@@ -1,9 +1,11 @@
-package com.jaaliska.activitycalendar.data.csv
+package com.jaaliska.activitycalendar.domain.usecase
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.jaaliska.activitycalendar.data.csv.GarminCsvParser
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
+import com.jaaliska.activitycalendar.domain.FakeImportHistory
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -16,11 +18,11 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 @RunWith(RobolectricTestRunner::class)
-class CsvImporterTest {
+class ImportActivitiesTest {
 
     private lateinit var database: AppDatabase
     private lateinit var repository: RoomActivityRepository
-    private lateinit var importer: CsvImporter
+    private lateinit var importActivities: ImportActivities
 
     @Before
     fun setUp() {
@@ -28,7 +30,11 @@ class CsvImporterTest {
             .inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .build()
         repository = RoomActivityRepository(database)
-        importer = CsvImporter(repository)
+        importActivities = ImportActivities(
+            repository = repository,
+            parser = GarminCsvParser(),
+            importHistory = FakeImportHistory(),
+        )
     }
 
     @After
@@ -38,7 +44,7 @@ class CsvImporterTest {
 
     @Test
     fun `an import stores every activity of the file once`() = runTest {
-        val report = importer.import(fixture())
+        val report = importActivities(fixture())
 
         assertEquals(8, report.imported)
         assertEquals(1, report.duplicates)
@@ -47,7 +53,7 @@ class CsvImporterTest {
 
     @Test
     fun `the report covers the period the file spans`() = runTest {
-        val report = importer.import(fixture())
+        val report = importActivities(fixture())
 
         assertEquals(LocalDate.of(2026, 3, 11), report.from)
         assertEquals(LocalDate.of(2026, 8, 18), report.to)
@@ -55,9 +61,9 @@ class CsvImporterTest {
 
     @Test
     fun `importing the same file twice adds nothing`() = runTest {
-        importer.import(fixture())
+        importActivities(fixture())
 
-        val second = importer.import(fixture())
+        val second = importActivities(fixture())
 
         assertEquals(0, second.imported)
         assertEquals(9, second.duplicates)
@@ -66,7 +72,7 @@ class CsvImporterTest {
 
     @Test
     fun `imported activities are readable by month`() = runTest {
-        importer.import(fixture())
+        importActivities(fixture())
 
         val august = repository.getMonth(YearMonth.of(2026, 8))
 

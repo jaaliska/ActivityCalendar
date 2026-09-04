@@ -1,7 +1,8 @@
-package com.jaaliska.activitycalendar.data.healthconnect
+package com.jaaliska.activitycalendar.domain.usecase
 
-import com.jaaliska.activitycalendar.data.settings.HealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -23,7 +24,7 @@ sealed interface SyncResult {
 }
 
 /** Puts what Health Connect holds into the repository. */
-class HealthConnectSyncer(
+class SyncHealthConnect(
     private val source: HealthConnectSource,
     private val repository: ActivityRepository,
     private val syncState: HealthConnectSyncState,
@@ -37,7 +38,7 @@ class HealthConnectSyncer(
      * The first synchronisation reads the whole history, later ones only what changed since.
      * A call made while another synchronisation runs waits for it instead of reading in parallel.
      */
-    suspend fun sync(): SyncResult = mutex.withLock {
+    suspend operator fun invoke(): SyncResult = mutex.withLock {
         if (!source.hasRequiredPermissions()) return@withLock SyncResult.NotConnected
         runCatching { readAndStore() }.fold(
             onSuccess = { SyncResult.Synced(it) },

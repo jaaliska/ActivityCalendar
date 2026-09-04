@@ -1,4 +1,4 @@
-package com.jaaliska.activitycalendar.data.healthconnect
+package com.jaaliska.activitycalendar.domain.healthconnect
 
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivitySource
