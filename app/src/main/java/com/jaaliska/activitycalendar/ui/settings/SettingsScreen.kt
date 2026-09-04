@@ -26,7 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
+import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
+import com.jaaliska.activitycalendar.ui.components.OnResume
+import com.jaaliska.activitycalendar.ui.healthconnect.timeAgo
 import com.jaaliska.activitycalendar.ui.theme.SchemeSwatches
 import java.time.LocalDate
 
@@ -36,8 +39,11 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
+    onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    OnResume(onScreenResumed)
+
     Scaffold(
         modifier = modifier,
         topBar = { DetailTopBar(title = stringResource(R.string.settings_title), onBack = onBack) },
@@ -57,7 +63,7 @@ fun SettingsScreen(
             RowDivider()
             SettingsRow(
                 title = stringResource(R.string.settings_health_connect_title),
-                subtitle = stringResource(R.string.settings_health_connect_not_connected),
+                subtitle = healthConnectSubtitle(state.healthConnect),
                 onClick = onHealthConnectClick,
             )
             RowDivider()
@@ -84,6 +90,19 @@ private fun importSubtitle(lastImport: LocalDate?): String =
     } else {
         stringResource(R.string.settings_import_last, lastImport.format(UI_DATE))
     }
+
+@Composable
+private fun healthConnectSubtitle(status: ConnectionStatus): String = when (status) {
+    is ConnectionStatus.Connected ->
+        if (status.lastSync == null) {
+            stringResource(R.string.health_connect_connected_status)
+        } else {
+            stringResource(R.string.settings_health_connect_connected, timeAgo(status.lastSync))
+        }
+
+    ConnectionStatus.Unavailable -> stringResource(R.string.settings_health_connect_unavailable)
+    else -> stringResource(R.string.settings_health_connect_not_connected)
+}
 
 @Composable
 private fun SectionHeader(title: String) {

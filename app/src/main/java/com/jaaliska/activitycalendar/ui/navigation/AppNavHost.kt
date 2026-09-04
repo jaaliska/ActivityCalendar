@@ -14,38 +14,56 @@ import com.jaaliska.activitycalendar.ui.calendar.CalendarViewModel
 import com.jaaliska.activitycalendar.ui.csvimport.ImportScreen
 import com.jaaliska.activitycalendar.ui.csvimport.ImportViewModel
 import com.jaaliska.activitycalendar.ui.healthconnect.HealthConnectScreen
+import com.jaaliska.activitycalendar.ui.healthconnect.HealthConnectViewModel
 import com.jaaliska.activitycalendar.ui.settings.SettingsScreen
 import com.jaaliska.activitycalendar.ui.settings.SettingsViewModel
 import com.jaaliska.activitycalendar.ui.viewModelFactoryOf
 
 @Composable
-fun AppNavHost(container: AppContainer, modifier: Modifier = Modifier) {
+fun AppNavHost(
+    container: AppContainer,
+    startDestination: Destination,
+    modifier: Modifier = Modifier,
+) {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = Destination.CALENDAR.route,
+        startDestination = startDestination.route,
         modifier = modifier,
     ) {
         composable(Destination.CALENDAR.route) {
             val calendarViewModel: CalendarViewModel = viewModel(
-                factory = viewModelFactoryOf { CalendarViewModel(container.activityRepository) },
+                factory = viewModelFactoryOf {
+                    CalendarViewModel(
+                        repository = container.activityRepository,
+                        healthConnectStatus = container.healthConnectStatus,
+                    )
+                },
             )
             val calendarState by calendarViewModel.state.collectAsState()
+            val syncStopped by calendarViewModel.syncStopped.collectAsState()
 
             CalendarScreen(
                 state = calendarState,
                 anchor = calendarViewModel.anchor,
+                syncStopped = syncStopped,
                 onMonthSettled = calendarViewModel::showMonth,
                 onSettingsClick = { navController.navigate(Destination.SETTINGS.route) },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
                 onRetry = calendarViewModel::retry,
+                onScreenResumed = calendarViewModel::refreshSyncStatus,
             )
         }
         composable(Destination.SETTINGS.route) {
             val settingsViewModel: SettingsViewModel = viewModel(
-                factory = viewModelFactoryOf { SettingsViewModel(container.importHistory) },
+                factory = viewModelFactoryOf {
+                    SettingsViewModel(
+                        importHistory = container.importHistory,
+                        healthConnectStatus = container.healthConnectStatus,
+                    )
+                },
             )
             val state by settingsViewModel.state.collectAsState()
 
@@ -54,6 +72,7 @@ fun AppNavHost(container: AppContainer, modifier: Modifier = Modifier) {
                 onBack = { navController.popBackStack() },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
+                onScreenResumed = settingsViewModel::refresh,
             )
         }
         composable(Destination.IMPORT.route) {
@@ -75,7 +94,26 @@ fun AppNavHost(container: AppContainer, modifier: Modifier = Modifier) {
             )
         }
         composable(Destination.HEALTH_CONNECT.route) {
-            HealthConnectScreen(onBack = { navController.popBackStack() })
+            val healthConnectViewModel: HealthConnectViewModel = viewModel(
+                factory = viewModelFactoryOf {
+                    HealthConnectViewModel(
+                        source = container.healthConnectSource,
+                        syncer = container.healthConnectSyncer,
+                        syncState = container.healthConnectSyncState,
+                    )
+                },
+            )
+            val healthConnectState by healthConnectViewModel.state.collectAsState()
+
+            HealthConnectScreen(
+                state = healthConnectState,
+                permissions = healthConnectViewModel.permissions,
+                onPermissionsResult = healthConnectViewModel::onPermissionsRequested,
+                onSyncNow = healthConnectViewModel::sync,
+                onScreenResumed = healthConnectViewModel::refresh,
+                onImportClick = { navController.navigate(Destination.IMPORT.route) },
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }

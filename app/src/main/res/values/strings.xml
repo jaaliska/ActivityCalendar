@@ -28,6 +28,8 @@
     <string name="calendar_error_title">Couldn\'t load your workouts</string>
     <string name="calendar_error_explanation">Your data is still there — the app just couldn\'t read it.</string>
     <string name="calendar_error_retry">Try again</string>
+    <string name="calendar_sync_banner">Sync stopped \u2014 Health Connect is not connected</string>
+    <string name="calendar_sync_banner_action">Fix</string>
 
     <string name="first_run_title">No workouts yet</string>
     <string name="first_run_import_title">Import history from Garmin CSV</string>
@@ -43,6 +45,8 @@
     <string name="settings_import_never">No imports yet</string>
     <string name="settings_health_connect_title">Health Connect</string>
     <string name="settings_health_connect_not_connected">Not connected</string>
+    <string name="settings_health_connect_connected">Connected \u00b7 synced %1$s</string>
+    <string name="settings_health_connect_unavailable">Not available on this phone</string>
     <string name="settings_demo_title">Demo data</string>
     <string name="settings_demo_subtitle">See the app without your own workouts</string>
     <string name="settings_color_scheme_title">Color scheme</string>
@@ -72,6 +76,58 @@
     <string name="instruction_warning_scroll">Only activities loaded on screen are exported. If you don\'t scroll to the end, the file will be incomplete.</string>
     <string name="instruction_warning_metric">Metric profile only \u2014 distances must be in kilometres.</string>
     <string name="instruction_warning_english">English Garmin Connect interface only \u2014 column names in other languages aren\'t recognised.</string>
+
+    <string name="health_connect_not_connected_status">Not connected</string>
+    <string name="health_connect_not_connected_explanation">Garmin Connect writes your workouts to Health Connect, the health storage built into Android. Connecting lets this app read them and fill your calendar by itself. Nothing is sent anywhere \u2014 all data stays on this phone.</string>
+    <string name="health_connect_permissions_title">Android will ask for permission to read</string>
+    <string name="health_connect_permission_workouts">workouts and their duration</string>
+    <string name="health_connect_permission_distance">distance in kilometres</string>
+    <string name="health_connect_permission_history">data older than 30 days</string>
+    <string name="health_connect_permission_background">reading in the background \u2014 optional</string>
+    <string name="health_connect_permission_background_note">Without background reading the app still works: it updates every time you open it.</string>
+    <string name="health_connect_connect">Connect</string>
+    <string name="health_connect_permissions_in_settings">Android shows that dialog only once. Any permission left out is granted in Health Connect settings \u2014 the app needs all four.</string>
+    <string name="health_connect_open_settings">Open Health Connect settings</string>
+
+    <string name="health_connect_unavailable_status">Not available on this phone</string>
+    <string name="health_connect_unavailable_explanation">Health Connect isn\'t installed. On Android 13 and older it comes as a separate app.</string>
+    <string name="health_connect_unavailable_warning_title">Installing it may not help</string>
+    <string name="health_connect_unavailable_warning">Garmin Connect writes to Health Connect only on Android 14 and newer. On this phone automatic sync will stay empty even after installing.</string>
+    <string name="health_connect_history_now_title">Get your history now</string>
+    <string name="health_connect_history_now_explanation">A CSV export from Garmin Connect works on any Android version.</string>
+    <string name="health_connect_import_csv">Import history from CSV</string>
+    <string name="health_connect_install">Install Health Connect anyway</string>
+
+    <string name="health_connect_syncing_status">Syncing\u2026</string>
+    <string name="health_connect_syncing_explanation">Reading workouts from Health Connect.</string>
+
+    <string name="health_connect_connected_status">Connected</string>
+    <string name="health_connect_connected_explanation">New workouts appear automatically.</string>
+    <string name="health_connect_foreground_only">Updates only while the app is open \u2014 background reading isn\'t allowed.</string>
+    <string name="health_connect_fix_it">Fix it</string>
+    <string name="health_connect_last_sync">Last sync %1$s</string>
+    <string name="health_connect_sync_now">Sync now</string>
+
+    <string name="health_connect_no_workouts_status">Connected, but no workouts found</string>
+    <string name="health_connect_no_workouts_explanation">The connection works. Health Connect has no workouts to read yet \u2014 two things to check.</string>
+    <string name="health_connect_check_garmin_title">Health Connect is off in Garmin Connect</string>
+    <string name="health_connect_check_garmin_explanation">Open Garmin Connect and turn Health Connect on in its settings.</string>
+    <string name="health_connect_open_garmin">Open Garmin Connect</string>
+    <string name="health_connect_check_watch_title">Your watch hasn\'t synced yet</string>
+    <string name="health_connect_check_watch_explanation">Workouts reach Health Connect only after the watch syncs with Garmin Connect.</string>
+    <string name="health_connect_check_again">Check again</string>
+
+    <string name="health_connect_failed_status">Last sync failed</string>
+    <string name="health_connect_failed_explanation">Health Connect didn\'t respond at %1$s. The connection and permissions are fine.</string>
+    <string name="health_connect_still_connected">Still connected</string>
+    <string name="health_connect_last_successful_sync">Last successful sync</string>
+    <string name="health_connect_never_synced">No successful sync yet</string>
+    <string name="health_connect_failed_note">Workouts up to that time are in your calendar. Later ones will arrive with the next sync.</string>
+    <string name="health_connect_try_again">Try again</string>
+    <string name="health_connect_automatic_note">Automatic sync keeps running \u2014 it will retry on its own.</string>
+
+    <string name="health_connect_time_today">Today, %1$s</string>
+    <string name="health_connect_time_date">%1$s, %2$s</string>
 
     <plurals name="import_skipped_rows">
         <item quantity="one">%1$d row had no date or duration and was skipped.</item>
