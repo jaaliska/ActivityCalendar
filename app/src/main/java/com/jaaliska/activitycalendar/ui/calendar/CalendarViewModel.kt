@@ -2,6 +2,8 @@ package com.jaaliska.activitycalendar.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
+import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectStatus
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
@@ -27,6 +31,7 @@ import java.time.YearMonth
  */
 class CalendarViewModel(
     private val repository: ActivityRepository,
+    private val healthConnectStatus: HealthConnectStatus,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
 
@@ -44,6 +49,22 @@ class CalendarViewModel(
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = CalendarUiState.Calendar(today),
         )
+
+    private val _syncStopped = MutableStateFlow(false)
+
+    /** Health Connect used to fill the calendar and no longer does; the screen says so on top. */
+    val syncStopped: StateFlow<Boolean> = _syncStopped.asStateFlow()
+
+    init {
+        refreshSyncStatus()
+    }
+
+    /** Asks again whether synchronisation still works: permissions change outside the app. */
+    fun refreshSyncStatus() {
+        viewModelScope.launch {
+            _syncStopped.value = healthConnectStatus.current() == ConnectionStatus.Stopped
+        }
+    }
 
     /** Says which month the pager has settled on, so its neighbours are read as well. */
     fun showMonth(month: YearMonth) {

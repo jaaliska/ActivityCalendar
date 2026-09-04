@@ -1,5 +1,7 @@
 package com.jaaliska.activitycalendar.ui.calendar
 
+import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
+import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectStatus
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
@@ -36,6 +38,8 @@ class CalendarViewModelTest {
         Clock.fixed(LocalDate.of(2026, 8, 23).atStartOfDay(ZONE).toInstant(), ZONE)
 
     private val august = YearMonth.of(2026, 8)
+
+    private val neverConnected = HealthConnectStatus { ConnectionStatus.NeverConnected }
 
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -122,7 +126,7 @@ class CalendarViewModelTest {
             activities = listOf(activity("2021-03-04T07:20:00", ActivityType.YOGA)),
             historyStart = LocalDate.of(2019, 1, 1),
         )
-        val viewModel = CalendarViewModel(repository, clock)
+        val viewModel = CalendarViewModel(repository, neverConnected, clock)
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
 
@@ -139,7 +143,7 @@ class CalendarViewModelTest {
             activities = listOf(activity("2021-03-04T07:20:00", ActivityType.YOGA)),
             historyStart = LocalDate.of(2019, 1, 1),
         )
-        val viewModel = CalendarViewModel(repository, clock)
+        val viewModel = CalendarViewModel(repository, neverConnected, clock)
         backgroundScope.launch { viewModel.state.collect {} }
 
         (1..12).forEach { viewModel.showMonth(august.minusMonths(it.toLong())) }
@@ -176,6 +180,7 @@ class CalendarViewModelTest {
     fun `retry after a failure shows the calendar`() = runTest(dispatcher) {
         val viewModel = CalendarViewModel(
             FailingRepository(thenReturns = FakeRepository(historyStart = HISTORY_START)),
+            neverConnected,
             clock,
         )
         backgroundScope.launch { viewModel.state.collect {} }
@@ -190,7 +195,7 @@ class CalendarViewModelTest {
 
     /** The state the screen ends up with once the repository has answered. */
     private fun TestScope.stateOf(repository: ActivityRepository): CalendarUiState {
-        val viewModel = CalendarViewModel(repository, clock)
+        val viewModel = CalendarViewModel(repository, neverConnected, clock)
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
         return viewModel.state.value

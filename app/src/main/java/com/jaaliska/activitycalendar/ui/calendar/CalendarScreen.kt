@@ -1,5 +1,6 @@
 package com.jaaliska.activitycalendar.ui.calendar
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
 import com.jaaliska.activitycalendar.ui.UI_MONTH
+import com.jaaliska.activitycalendar.ui.components.OnResume
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
@@ -50,13 +54,17 @@ import java.time.YearMonth
 fun CalendarScreen(
     state: CalendarUiState,
     anchor: YearMonth,
+    syncStopped: Boolean,
     onMonthSettled: (YearMonth) -> Unit,
     onSettingsClick: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
     onRetry: () -> Unit,
+    onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    OnResume(onScreenResumed)
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -78,6 +86,10 @@ fun CalendarScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            if (syncStopped) {
+                SyncStoppedBanner(onFixClick = onHealthConnectClick)
+            }
+
             when (state) {
                 // The month row is hidden, not disabled: there is no calendar to page through yet.
                 CalendarUiState.NoData -> NoDataState(
@@ -212,6 +224,39 @@ private fun MonthRow(
         if (reading) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp))
         }
+    }
+}
+
+/** Above the month while Health Connect has stopped filling it: what happened, and where to fix it. */
+@Composable
+private fun SyncStoppedBanner(onFixClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
+            .clickable(onClick = onFixClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_sync_disabled),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = stringResource(R.string.calendar_sync_banner),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = stringResource(R.string.calendar_sync_banner_action),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
