@@ -53,7 +53,7 @@ class ImportViewModelTest {
         Dispatchers.setMain(dispatcher)
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        repository = RoomActivityRepository(database.activityDao())
+        repository = RoomActivityRepository(database)
         importHistory = ImportHistory(
             PreferenceDataStoreFactory.create(
                 scope = CoroutineScope(Job() + Dispatchers.IO),

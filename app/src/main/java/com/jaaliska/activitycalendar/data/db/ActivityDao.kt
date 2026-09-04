@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -36,6 +37,14 @@ interface ActivityDao {
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(activities: List<ActivityEntity>): List<Long>
+
+    /** Returns the stored activities that started at one of [startTimes]. */
+    @Query("SELECT * FROM activities WHERE startTimeLocal IN (:startTimes)")
+    suspend fun getByStartTimes(startTimes: List<String>): List<ActivityEntity>
+
+    /** Rewrites the given rows, each matched by its id. */
+    @Update
+    suspend fun updateAll(activities: List<ActivityEntity>)
 
     @Query("DELETE FROM activities")
     suspend fun clear()

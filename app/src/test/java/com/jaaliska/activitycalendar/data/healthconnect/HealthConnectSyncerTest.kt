@@ -47,7 +47,7 @@ class HealthConnectSyncerTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        repository = RoomActivityRepository(database.activityDao())
+        repository = RoomActivityRepository(database)
         syncState = HealthConnectSyncState(
             PreferenceDataStoreFactory.create(
                 scope = CoroutineScope(Job() + Dispatchers.IO),

@@ -20,9 +20,10 @@ interface ActivityRepository {
     suspend fun getMonth(month: YearMonth): List<Activity>
 
     /**
-     * Stores [activities], skipping the ones already present.
+     * Stores [activities]. An activity already stored is not stored twice: what the two
+     * records know is merged into the stored one, field by field, as [mergeWith] decides.
      *
-     * @return how many activities were actually stored
+     * @return how many activities were new
      */
     suspend fun save(activities: List<Activity>): Int
 }

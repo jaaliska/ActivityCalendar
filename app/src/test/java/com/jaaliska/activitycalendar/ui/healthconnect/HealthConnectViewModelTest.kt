@@ -63,7 +63,7 @@ class HealthConnectViewModelTest {
         )
         syncer = HealthConnectSyncer(
             source = source,
-            repository = RoomActivityRepository(database.activityDao()),
+            repository = RoomActivityRepository(database),
             syncState = syncState,
             clock = clock,
         )
