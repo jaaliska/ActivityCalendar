@@ -30,7 +30,7 @@ class RoomActivityRepositoryTest {
         database = Room
             .inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .build()
-        repository = RoomActivityRepository(database.activityDao())
+        repository = RoomActivityRepository(database)
     }
 
     @After

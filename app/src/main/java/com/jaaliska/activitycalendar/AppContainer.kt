@@ -30,7 +30,7 @@ class AppContainer(context: Context) {
         .databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
         .build()
 
-    val activityRepository: ActivityRepository = RoomActivityRepository(database.activityDao())
+    val activityRepository: ActivityRepository = RoomActivityRepository(database)
 
     val csvImporter: CsvImporter = CsvImporter(activityRepository)
 
