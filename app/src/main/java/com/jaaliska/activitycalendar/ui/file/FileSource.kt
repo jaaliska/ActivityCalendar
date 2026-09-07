@@ -1,4 +1,4 @@
-package com.jaaliska.activitycalendar.data.file
+package com.jaaliska.activitycalendar.ui.file
 
 import android.net.Uri
 import java.io.InputStream

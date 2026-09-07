@@ -3,21 +3,24 @@ package com.jaaliska.activitycalendar
 import android.content.Context
 import android.util.Log
 import androidx.room.Room
-import com.jaaliska.activitycalendar.data.csv.CsvImporter
+import com.jaaliska.activitycalendar.data.csv.GarminCsvParser
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.file.ContentFileSource
-import com.jaaliska.activitycalendar.data.file.FileSource
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectSource
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectStatus
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectSyncer
 import com.jaaliska.activitycalendar.data.healthconnect.PlatformHealthConnectSource
-import com.jaaliska.activitycalendar.data.healthconnect.PlatformHealthConnectStatus
-import com.jaaliska.activitycalendar.data.healthconnect.SyncResult
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
-import com.jaaliska.activitycalendar.data.settings.HealthConnectSyncState
-import com.jaaliska.activitycalendar.data.settings.ImportHistory
+import com.jaaliska.activitycalendar.data.settings.DataStoreHealthConnectSyncState
+import com.jaaliska.activitycalendar.data.settings.DataStoreImportHistory
 import com.jaaliska.activitycalendar.data.settings.settingsDataStore
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.ImportHistory
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.ImportActivities
+import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
+import com.jaaliska.activitycalendar.domain.usecase.SyncHealthConnect
+import com.jaaliska.activitycalendar.domain.usecase.SyncResult
+import com.jaaliska.activitycalendar.ui.file.FileSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,20 +35,26 @@ class AppContainer(context: Context) {
 
     val activityRepository: ActivityRepository = RoomActivityRepository(database)
 
-    val csvImporter: CsvImporter = CsvImporter(activityRepository)
+    val observeCalendarMonths = ObserveCalendarMonths(activityRepository)
 
-    val importHistory: ImportHistory = ImportHistory(context.settingsDataStore)
+    val importHistory: ImportHistory = DataStoreImportHistory(context.settingsDataStore)
+
+    val importActivities = ImportActivities(
+        repository = activityRepository,
+        parser = GarminCsvParser(),
+        importHistory = importHistory,
+    )
 
     val fileSource: FileSource = ContentFileSource(context.contentResolver)
 
     val healthConnectSource: HealthConnectSource = PlatformHealthConnectSource(context)
 
-    val healthConnectSyncState = HealthConnectSyncState(context.settingsDataStore)
+    val healthConnectSyncState: HealthConnectSyncState =
+        DataStoreHealthConnectSyncState(context.settingsDataStore)
 
-    val healthConnectStatus: HealthConnectStatus =
-        PlatformHealthConnectStatus(healthConnectSource, healthConnectSyncState)
+    val getHealthConnectStatus = GetHealthConnectStatus(healthConnectSource, healthConnectSyncState)
 
-    val healthConnectSyncer = HealthConnectSyncer(
+    val syncHealthConnect = SyncHealthConnect(
         source = healthConnectSource,
         repository = activityRepository,
         syncState = healthConnectSyncState,
@@ -60,7 +69,7 @@ class AppContainer(context: Context) {
      */
     fun syncHealthConnectOnOpen() {
         scope.launch {
-            val result = healthConnectSyncer.sync()
+            val result = syncHealthConnect()
             if (result is SyncResult.Failed) Log.w(TAG, "sync on open failed", result.cause)
         }
     }

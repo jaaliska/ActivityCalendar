@@ -1,6 +1,6 @@
 package com.jaaliska.activitycalendar.ui.settings
 
-import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
+import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import java.time.LocalDate
 
 /** What the settings screen shows.

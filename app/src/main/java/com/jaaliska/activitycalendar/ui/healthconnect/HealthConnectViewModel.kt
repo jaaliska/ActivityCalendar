@@ -2,11 +2,11 @@ package com.jaaliska.activitycalendar.ui.healthconnect
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectAvailability
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectSource
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectSyncer
-import com.jaaliska.activitycalendar.data.healthconnect.SyncResult
-import com.jaaliska.activitycalendar.data.settings.HealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectAvailability
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.usecase.SyncHealthConnect
+import com.jaaliska.activitycalendar.domain.usecase.SyncResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,7 @@ import java.time.Instant
 
 class HealthConnectViewModel(
     private val source: HealthConnectSource,
-    private val syncer: HealthConnectSyncer,
+    private val syncHealthConnect: SyncHealthConnect,
     private val syncState: HealthConnectSyncState,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
@@ -58,7 +58,7 @@ class HealthConnectViewModel(
         _state.value = HealthConnectUiState.Syncing
         viewModelScope.launch {
             if (afterPermissionDialog) syncState.recordPermissionsAsked()
-            _state.value = when (syncer.sync()) {
+            _state.value = when (syncHealthConnect()) {
                 is SyncResult.Synced -> connectedState()
                 SyncResult.NotConnected -> currentState()
                 is SyncResult.Failed -> HealthConnectUiState.SyncFailed(

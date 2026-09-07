@@ -2,10 +2,12 @@ package com.jaaliska.activitycalendar.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectStatus
-import com.jaaliska.activitycalendar.domain.Activity
-import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
+import com.jaaliska.activitycalendar.domain.usecase.CalendarWindow
+import com.jaaliska.activitycalendar.domain.usecase.DayActivities
+import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.MonthActivities
+import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
@@ -30,8 +33,8 @@ import java.time.YearMonth
  * this only answers what is in the three months around it.
  */
 class CalendarViewModel(
-    private val repository: ActivityRepository,
-    private val healthConnectStatus: HealthConnectStatus,
+    private val observeCalendarMonths: ObserveCalendarMonths,
+    private val getHealthConnectStatus: GetHealthConnectStatus,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
 
@@ -62,7 +65,7 @@ class CalendarViewModel(
     /** Asks again whether synchronisation still works: permissions change outside the app. */
     fun refreshSyncStatus() {
         viewModelScope.launch {
-            _syncStopped.value = healthConnectStatus.current() == ConnectionStatus.Stopped
+            _syncStopped.value = getHealthConnectStatus() == ConnectionStatus.Stopped
         }
     }
 
@@ -99,54 +102,27 @@ class CalendarViewModel(
             ) { answer, slow -> Read(answer, slow) }
         }
 
-    private fun stored(month: YearMonth): Flow<CalendarUiState?> {
-        val window = month.minusMonths(1)..month.plusMonths(1)
-        return combine(
-            repository.observeRange(
-                window.start.gridStart(),
-                window.endInclusive.gridEndExclusive(),
-            ),
-            repository.observeHistoryStart(),
-        ) { activities, historyStart ->
-            if (historyStart == null) {
-                CalendarUiState.NoData
-            } else {
-                calendar(window, activities, historyStart)
-            }
+    private fun stored(month: YearMonth): Flow<CalendarUiState?> =
+        observeCalendarMonths(month).map { window ->
+            if (window.historyStart == null) CalendarUiState.NoData else window.calendar()
         }
-    }
 
-    private fun calendar(
-        window: ClosedRange<YearMonth>,
-        activities: List<Activity>,
-        historyStart: LocalDate,
-    ): CalendarUiState.Calendar {
-        val byDay = activities.groupBy { it.startTimeLocal.toLocalDate() }
-        val months = generateSequence(window.start) { it.plusMonths(1) }
-            .takeWhile { it <= window.endInclusive }
-        return CalendarUiState.Calendar(
-            today = today,
-            pages = months.associateWith { page(it, byDay, historyStart) },
-        )
-    }
+    private fun CalendarWindow.calendar() = CalendarUiState.Calendar(
+        today = today,
+        pages = months.associate { it.month to it.page() },
+    )
 
-    private fun page(
-        month: YearMonth,
-        byDay: Map<LocalDate, List<Activity>>,
-        historyStart: LocalDate,
-    ) = MonthPage(
+    private fun MonthActivities.page() = MonthPage(
         month = month,
-        weeks = month.gridWeeks().map { week ->
-            week.map { date ->
-                CalendarDay(
-                    date = date,
-                    inMonth = YearMonth.from(date) == month,
-                    isToday = date == today,
-                    types = byDay[date].orEmpty().map { it.type },
-                )
-            }
-        },
-        historyStart = historyStart.takeIf { month.atEndOfMonth() < it },
+        weeks = weeks.map { week -> week.map { it.day() } },
+        historyStart = historyStart,
+    )
+
+    private fun DayActivities.day() = CalendarDay(
+        date = date,
+        inMonth = inMonth,
+        isToday = date == today,
+        types = types,
     )
 
     // A local read takes milliseconds. The progress line exists for the read that does not.

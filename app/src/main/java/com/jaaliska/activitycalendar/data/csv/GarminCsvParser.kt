@@ -4,7 +4,10 @@ import com.github.doyaaaaaken.kotlincsv.dsl.context.ExcessFieldsRowBehaviour
 import com.github.doyaaaaaken.kotlincsv.dsl.context.InsufficientFieldsRowBehaviour
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.jaaliska.activitycalendar.domain.Activity
+import com.jaaliska.activitycalendar.domain.ActivityFileParser
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
+import com.jaaliska.activitycalendar.domain.ParsedActivities
+import com.jaaliska.activitycalendar.domain.SkippedRow
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.time.Duration
@@ -13,26 +16,10 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import kotlin.math.roundToLong
 
-/** A row of the export the parser could not read. */
-data class SkippedRow(val number: Int, val reason: String)
-
-/** Everything one export file turned out to contain. */
-data class CsvParseResult(
-    val activities: List<Activity>,
-    val skippedRows: List<SkippedRow>,
-)
-
 /** Reads the CSV that the Garmin Connect website exports from its Activities tab. */
-class GarminCsvParser {
+class GarminCsvParser : ActivityFileParser {
 
-    /**
-     * Reads every activity of the export, collecting the rows it had to skip instead of failing.
-     *
-     * @param input the export file; the caller closes it
-     * @return the activities and the skipped rows
-     * @throws IllegalArgumentException if the file is not a Garmin export
-     */
-    fun parse(input: InputStream): CsvParseResult {
+    override fun parse(input: InputStream): ParsedActivities {
         val activities = mutableListOf<Activity>()
         val skipped = mutableListOf<SkippedRow>()
         val stream = input.buffered()
@@ -50,7 +37,7 @@ class GarminCsvParser {
                 }
             }
         }
-        return CsvParseResult(activities, skipped)
+        return ParsedActivities(activities, skipped)
     }
 
     private fun Map<String, String>.toActivity(): RowResult {

@@ -3,9 +3,8 @@ package com.jaaliska.activitycalendar.ui.csvimport
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jaaliska.activitycalendar.data.csv.CsvImporter
-import com.jaaliska.activitycalendar.data.file.FileSource
-import com.jaaliska.activitycalendar.data.settings.ImportHistory
+import com.jaaliska.activitycalendar.domain.usecase.ImportActivities
+import com.jaaliska.activitycalendar.ui.file.FileSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,14 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Clock
-import java.time.LocalDate
 
 class ImportViewModel(
-    private val importer: CsvImporter,
+    private val importActivities: ImportActivities,
     private val fileSource: FileSource,
-    private val importHistory: ImportHistory,
-    private val clock: Clock = Clock.systemDefaultZone(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
@@ -37,13 +32,10 @@ class ImportViewModel(
         viewModelScope.launch {
             _state.value = runCatching {
                 withContext(ioDispatcher) {
-                    fileSource.open(uri).use { importer.import(it) }
+                    fileSource.open(uri).use { importActivities(it) }
                 }
             }.fold(
-                onSuccess = { report ->
-                    importHistory.record(LocalDate.now(clock))
-                    ImportUiState.Done(report)
-                },
+                onSuccess = { report -> ImportUiState.Done(report) },
                 onFailure = { failure ->
                     ImportUiState.Failed(fileName, failure.toReason())
                 },

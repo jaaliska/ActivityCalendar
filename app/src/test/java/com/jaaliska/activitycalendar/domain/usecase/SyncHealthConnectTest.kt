@@ -1,4 +1,4 @@
-package com.jaaliska.activitycalendar.data.healthconnect
+package com.jaaliska.activitycalendar.domain.usecase
 
 import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -6,8 +6,11 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
-import com.jaaliska.activitycalendar.data.settings.HealthConnectSyncState
+import com.jaaliska.activitycalendar.data.settings.DataStoreHealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.ActivityType
+import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSource
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.healthconnect.healthConnectActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,7 +35,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 
 @RunWith(RobolectricTestRunner::class)
-class HealthConnectSyncerTest {
+class SyncHealthConnectTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -40,6 +43,7 @@ class HealthConnectSyncerTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: RoomActivityRepository
     private lateinit var syncState: HealthConnectSyncState
+    private lateinit var syncHealthConnect: SyncHealthConnect
 
     private val source = FakeHealthConnectSource()
 
@@ -48,11 +52,17 @@ class HealthConnectSyncerTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
         repository = RoomActivityRepository(database)
-        syncState = HealthConnectSyncState(
+        syncState = DataStoreHealthConnectSyncState(
             PreferenceDataStoreFactory.create(
                 scope = CoroutineScope(Job() + Dispatchers.IO),
                 produceFile = { temporaryFolder.newFile("sync.preferences_pb") },
             ),
+        )
+        syncHealthConnect = SyncHealthConnect(
+            source = source,
+            repository = repository,
+            syncState = syncState,
+            clock = Clock.fixed(NOW, ZoneId.of("Europe/Warsaw")),
         )
     }
 
@@ -66,7 +76,7 @@ class HealthConnectSyncerTest {
             healthConnectActivity("2026-08-12T19:00:00", ActivityType.YOGA),
         )
 
-        val result = syncer().sync()
+        val result = syncHealthConnect()
 
         assertEquals(SyncResult.Synced(added = 2), result)
         assertEquals(2, storedIn(YearMonth.of(2026, 3)) + storedIn(YearMonth.of(2026, 8)))
@@ -76,11 +86,10 @@ class HealthConnectSyncerTest {
     @Test
     fun `later syncs ask only for what changed`() = runTest {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
-        val syncer = syncer()
-        syncer.sync()
+        syncHealthConnect()
 
         source.changed = listOf(healthConnectActivity("2026-08-13T07:15:00", ActivityType.WALKING))
-        val result = syncer.sync()
+        val result = syncHealthConnect()
 
         assertEquals(SyncResult.Synced(added = 1), result)
         assertEquals(1, source.fullReads)
@@ -92,11 +101,10 @@ class HealthConnectSyncerTest {
     fun `a session that comes back a second time does not become a second workout`() = runTest {
         val run = healthConnectActivity("2026-08-12T19:00:00")
         source.sessions = listOf(run)
-        val syncer = syncer()
-        syncer.sync()
+        syncHealthConnect()
 
         source.changed = listOf(run)
-        val result = syncer.sync()
+        val result = syncHealthConnect()
 
         assertEquals(SyncResult.Synced(added = 0), result)
         assertEquals(1, storedIn(YearMonth.of(2026, 8)))
@@ -105,12 +113,11 @@ class HealthConnectSyncerTest {
     @Test
     fun `a token too old to answer with sends the sync back over the whole history`() = runTest {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
-        val syncer = syncer()
-        syncer.sync()
+        syncHealthConnect()
 
         source.tokenExpired = true
         source.sessions = source.sessions + healthConnectActivity("2026-08-13T07:15:00")
-        val result = syncer.sync()
+        val result = syncHealthConnect()
 
         assertEquals(SyncResult.Synced(added = 1), result)
         assertEquals(2, source.fullReads)
@@ -120,11 +127,10 @@ class HealthConnectSyncerTest {
     @Test
     fun `a failed sync leaves the time of the last successful one alone`() = runTest {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
-        val syncer = syncer()
-        syncer.sync()
+        syncHealthConnect()
 
         source.failure = IOException("Health Connect did not answer")
-        val result = syncer.sync()
+        val result = syncHealthConnect()
 
         assertTrue(result is SyncResult.Failed)
         assertEquals(NOW, syncState.lastSync.first())
@@ -136,7 +142,7 @@ class HealthConnectSyncerTest {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
         source.requiredPermissionsGranted = false
 
-        val result = syncer().sync()
+        val result = syncHealthConnect()
 
         assertEquals(SyncResult.NotConnected, result)
         assertEquals(0, source.fullReads)
@@ -149,7 +155,7 @@ class HealthConnectSyncerTest {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
         source.backgroundPermissionGranted = false
 
-        val result = syncer().sync()
+        val result = syncHealthConnect()
 
         assertEquals(SyncResult.Synced(added = 1), result)
         assertEquals(1, storedIn(YearMonth.of(2026, 8)))
@@ -158,22 +164,14 @@ class HealthConnectSyncerTest {
     @Test
     fun `a Health Connect without a single session is remembered as empty until one arrives`() =
         runTest {
-            val syncer = syncer()
-            syncer.sync()
+                syncHealthConnect()
             assertFalse(syncState.seenAnySession.first())
 
             source.changed = listOf(healthConnectActivity("2026-08-12T19:00:00"))
-            syncer.sync()
+            syncHealthConnect()
 
             assertTrue(syncState.seenAnySession.first())
         }
-
-    private fun syncer() = HealthConnectSyncer(
-        source = source,
-        repository = repository,
-        syncState = syncState,
-        clock = Clock.fixed(NOW, ZoneId.of("Europe/Warsaw")),
-    )
 
     private suspend fun storedIn(month: YearMonth): Int = repository.getMonth(month).size
 

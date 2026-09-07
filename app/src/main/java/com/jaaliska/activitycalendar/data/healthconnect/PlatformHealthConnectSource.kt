@@ -12,6 +12,9 @@ import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectAvailability
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectChanges
+import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
 import java.time.LocalDateTime
 import java.time.ZoneId
 

@@ -36,8 +36,8 @@ fun AppNavHost(
             val calendarViewModel: CalendarViewModel = viewModel(
                 factory = viewModelFactoryOf {
                     CalendarViewModel(
-                        repository = container.activityRepository,
-                        healthConnectStatus = container.healthConnectStatus,
+                        observeCalendarMonths = container.observeCalendarMonths,
+                        getHealthConnectStatus = container.getHealthConnectStatus,
                     )
                 },
             )
@@ -61,7 +61,7 @@ fun AppNavHost(
                 factory = viewModelFactoryOf {
                     SettingsViewModel(
                         importHistory = container.importHistory,
-                        healthConnectStatus = container.healthConnectStatus,
+                        getHealthConnectStatus = container.getHealthConnectStatus,
                     )
                 },
             )
@@ -79,9 +79,8 @@ fun AppNavHost(
             val importViewModel: ImportViewModel = viewModel(
                 factory = viewModelFactoryOf {
                     ImportViewModel(
-                        importer = container.csvImporter,
+                        importActivities = container.importActivities,
                         fileSource = container.fileSource,
-                        importHistory = container.importHistory,
                     )
                 },
             )
@@ -98,7 +97,7 @@ fun AppNavHost(
                 factory = viewModelFactoryOf {
                     HealthConnectViewModel(
                         source = container.healthConnectSource,
-                        syncer = container.healthConnectSyncer,
+                        syncHealthConnect = container.syncHealthConnect,
                         syncState = container.healthConnectSyncState,
                     )
                 },

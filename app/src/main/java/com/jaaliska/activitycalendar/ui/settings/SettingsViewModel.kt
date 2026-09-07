@@ -2,9 +2,9 @@ package com.jaaliska.activitycalendar.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jaaliska.activitycalendar.data.healthconnect.ConnectionStatus
-import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectStatus
-import com.jaaliska.activitycalendar.data.settings.ImportHistory
+import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
+import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.ImportHistory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     importHistory: ImportHistory,
-    private val healthConnectStatus: HealthConnectStatus,
+    private val getHealthConnectStatus: GetHealthConnectStatus,
 ) : ViewModel() {
 
     private val healthConnect = MutableStateFlow<ConnectionStatus>(ConnectionStatus.NeverConnected)
@@ -35,7 +35,7 @@ class SettingsViewModel(
 
     /** Asks again how Health Connect stands: it is connected and disconnected outside this screen. */
     fun refresh() {
-        viewModelScope.launch { healthConnect.value = healthConnectStatus.current() }
+        viewModelScope.launch { healthConnect.value = getHealthConnectStatus() }
     }
 
     private companion object {
