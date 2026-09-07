@@ -2,7 +2,6 @@ package com.jaaliska.activitycalendar.domain.usecase
 
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
-import com.jaaliska.activitycalendar.domain.ActivityType
 import com.jaaliska.activitycalendar.domain.calendar.gridEndExclusive
 import com.jaaliska.activitycalendar.domain.calendar.gridStart
 import com.jaaliska.activitycalendar.domain.calendar.gridWeeks
@@ -15,12 +14,12 @@ import java.time.YearMonth
  * One day of a month's grid.
  *
  * @property inMonth false for a day of a neighbouring month, which keeps its own activities
- * @property types types of the day's activities, in start-time order
+ * @property activities the day's activities, in start-time order
  */
 data class DayActivities(
     val date: LocalDate,
     val inMonth: Boolean,
-    val types: List<ActivityType>,
+    val activities: List<Activity>,
 )
 
 /**
@@ -90,7 +89,7 @@ class ObserveCalendarMonths(private val repository: ActivityRepository) {
                 DayActivities(
                     date = date,
                     inMonth = YearMonth.from(date) == month,
-                    types = byDay[date].orEmpty().map { it.type },
+                    activities = byDay[date].orEmpty(),
                 )
             }
         },

@@ -8,6 +8,7 @@ import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSourc
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
+import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -74,9 +75,9 @@ class CalendarViewModelTest {
         assertEquals(6, page.weeks.size)
         assertEquals(
             listOf(ActivityType.RUNNING, ActivityType.STRENGTH_TRAINING),
-            page.day(LocalDate.of(2026, 8, 16)).types,
+            page.dayAt(LocalDate.of(2026, 8, 16)).types,
         )
-        assertTrue(page.day(LocalDate.of(2026, 8, 17)).types.isEmpty())
+        assertTrue(page.dayAt(LocalDate.of(2026, 8, 17)).types.isEmpty())
     }
 
     @Test
@@ -86,7 +87,7 @@ class CalendarViewModelTest {
             historyStart = HISTORY_START,
         )
 
-        val july30 = calendar(repository).page(august).day(LocalDate.of(2026, 7, 30))
+        val july30 = calendar(repository).page(august).dayAt(LocalDate.of(2026, 7, 30))
 
         assertEquals(listOf(ActivityType.BADMINTON), july30.types)
         assertEquals(false, july30.inMonth)
@@ -96,7 +97,7 @@ class CalendarViewModelTest {
     fun `today is marked, other days are not`() = runTest(dispatcher) {
         val page = calendar(FakeRepository(historyStart = HISTORY_START)).page(august)
 
-        assertTrue(page.day(LocalDate.of(2026, 8, 23)).isToday)
+        assertTrue(page.dayAt(LocalDate.of(2026, 8, 23)).isToday)
         assertEquals(1, page.weeks.flatten().count { it.isToday })
     }
 
@@ -131,7 +132,7 @@ class CalendarViewModelTest {
             activities = listOf(activity("2021-03-04T07:20:00", ActivityType.YOGA)),
             historyStart = LocalDate.of(2019, 1, 1),
         )
-        val viewModel = CalendarViewModel(ObserveCalendarMonths(repository), neverConnected, clock)
+        val viewModel = viewModelOn(repository)
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
 
@@ -139,7 +140,7 @@ class CalendarViewModelTest {
         advanceUntilIdle()
 
         val page = (viewModel.state.value as CalendarUiState.Calendar).page(YearMonth.of(2021, 3))
-        assertEquals(listOf(ActivityType.YOGA), page.day(LocalDate.of(2021, 3, 4)).types)
+        assertEquals(listOf(ActivityType.YOGA), page.dayAt(LocalDate.of(2021, 3, 4)).types)
     }
 
     @Test
@@ -148,7 +149,7 @@ class CalendarViewModelTest {
             activities = listOf(activity("2021-03-04T07:20:00", ActivityType.YOGA)),
             historyStart = LocalDate.of(2019, 1, 1),
         )
-        val viewModel = CalendarViewModel(ObserveCalendarMonths(repository), neverConnected, clock)
+        val viewModel = viewModelOn(repository)
         backgroundScope.launch { viewModel.state.collect {} }
 
         (1..12).forEach { viewModel.showMonth(august.minusMonths(it.toLong())) }
@@ -183,12 +184,8 @@ class CalendarViewModelTest {
 
     @Test
     fun `retry after a failure shows the calendar`() = runTest(dispatcher) {
-        val viewModel = CalendarViewModel(
-            ObserveCalendarMonths(
-                FailingRepository(thenReturns = FakeRepository(historyStart = HISTORY_START)),
-            ),
-            neverConnected,
-            clock,
+        val viewModel = viewModelOn(
+            FailingRepository(thenReturns = FakeRepository(historyStart = HISTORY_START)),
         )
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
@@ -200,9 +197,102 @@ class CalendarViewModelTest {
         assertTrue(viewModel.state.value is CalendarUiState.Calendar)
     }
 
+    @Test
+    fun `picking a day shows it, picking it again shows the period back`() = runTest(dispatcher) {
+        val viewModel = running(FakeRepository(historyStart = HISTORY_START))
+        val august16 = LocalDate.of(2026, 8, 16)
+
+        viewModel.selectDay(august16)
+        advanceUntilIdle()
+        assertEquals(august16, calendarOf(viewModel).selectedDay)
+
+        viewModel.selectDay(august16)
+        advanceUntilIdle()
+        assertNull(calendarOf(viewModel).selectedDay)
+    }
+
+    @Test
+    fun `leaving the month drops the picked day`() = runTest(dispatcher) {
+        val viewModel = running(FakeRepository(historyStart = HISTORY_START))
+
+        viewModel.selectDay(LocalDate.of(2026, 8, 16))
+        viewModel.showMonth(YearMonth.of(2026, 9))
+        advanceUntilIdle()
+
+        assertNull(calendarOf(viewModel).selectedDay)
+    }
+
+    @Test
+    fun `settling on the month already shown keeps the picked day`() = runTest(dispatcher) {
+        val viewModel = running(FakeRepository(historyStart = HISTORY_START))
+
+        viewModel.selectDay(LocalDate.of(2026, 8, 16))
+        viewModel.showMonth(august)
+        advanceUntilIdle()
+
+        assertEquals(LocalDate.of(2026, 8, 16), calendarOf(viewModel).selectedDay)
+    }
+
+    @Test
+    fun `the picked day carries its activities, earliest first`() = runTest(dispatcher) {
+        val repository = FakeRepository(
+            activities = listOf(
+                activity("2026-08-16T12:05:00", ActivityType.STRENGTH_TRAINING),
+                activity("2026-08-16T07:20:00", ActivityType.RUNNING),
+            ),
+            historyStart = HISTORY_START,
+        )
+        val viewModel = running(repository)
+
+        viewModel.selectDay(LocalDate.of(2026, 8, 16))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(ActivityType.RUNNING, ActivityType.STRENGTH_TRAINING),
+            calendarOf(viewModel).selectedDayActivities().map { it.type },
+        )
+    }
+
+    @Test
+    fun `a picked day of a neighbouring month carries its activities too`() = runTest(dispatcher) {
+        val repository = FakeRepository(
+            activities = listOf(activity("2026-09-05T18:00:00", ActivityType.BADMINTON)),
+            historyStart = HISTORY_START,
+        )
+        val viewModel = running(repository)
+
+        viewModel.selectDay(LocalDate.of(2026, 9, 5))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(ActivityType.BADMINTON),
+            calendarOf(viewModel).selectedDayActivities().map { it.type },
+        )
+    }
+
+    @Test
+    fun `the panel adds up the seven days ending today`() = runTest(dispatcher) {
+        val repository = FakeRepository(
+            activities = listOf(
+                activity("2026-08-23T07:20:00", ActivityType.RUNNING),
+                activity("2026-08-17T07:20:00", ActivityType.RUNNING),
+                // One day before the period starts.
+                activity("2026-08-16T07:20:00", ActivityType.YOGA),
+            ),
+            historyStart = HISTORY_START,
+        )
+
+        val recent = calendarOf(running(repository)).recent!!
+
+        assertEquals(LocalDate.of(2026, 8, 17), recent.from)
+        assertEquals(LocalDate.of(2026, 8, 23), recent.to)
+        assertEquals(listOf(ActivityType.RUNNING), recent.byType.map { it.type })
+        assertEquals(2, recent.byType.single().count)
+    }
+
     /** The state the screen ends up with once the repository has answered. */
     private fun TestScope.stateOf(repository: ActivityRepository): CalendarUiState {
-        val viewModel = CalendarViewModel(ObserveCalendarMonths(repository), neverConnected, clock)
+        val viewModel = viewModelOn(repository)
         backgroundScope.launch { viewModel.state.collect {} }
         advanceUntilIdle()
         return viewModel.state.value
@@ -211,8 +301,26 @@ class CalendarViewModelTest {
     private fun TestScope.calendar(repository: ActivityRepository): CalendarUiState.Calendar =
         stateOf(repository) as CalendarUiState.Calendar
 
-    private fun MonthPage.day(date: LocalDate): CalendarDay =
+    private fun MonthPage.dayAt(date: LocalDate): CalendarDay =
         weeks.flatten().single { it.date == date }
+
+    /** A view model whose state is already being collected, the way the screen collects it. */
+    private fun TestScope.running(repository: ActivityRepository): CalendarViewModel {
+        val viewModel = viewModelOn(repository)
+        backgroundScope.launch { viewModel.state.collect {} }
+        advanceUntilIdle()
+        return viewModel
+    }
+
+    private fun calendarOf(viewModel: CalendarViewModel) =
+        viewModel.state.value as CalendarUiState.Calendar
+
+    private fun viewModelOn(repository: ActivityRepository) = CalendarViewModel(
+        observeCalendarMonths = ObserveCalendarMonths(repository),
+        observeRecentSummary = ObserveRecentSummary(repository),
+        getHealthConnectStatus = neverConnected,
+        clock = clock,
+    )
 
     /** Answers straight away, the way a local database does. */
     private class FakeRepository(
@@ -221,7 +329,13 @@ class CalendarViewModelTest {
     ) : ActivityRepository {
 
         override fun observeRange(from: LocalDate, toExclusive: LocalDate): Flow<List<Activity>> =
-            flow { emit(activities.filter { it.startTimeLocal.toLocalDate() in from..<toExclusive }) }
+            flow {
+                emit(
+                    activities
+                        .filter { it.startTimeLocal.toLocalDate() in from..<toExclusive }
+                        .sortedBy { it.startTimeLocal },
+                )
+            }
 
         override fun observeHistoryStart(): Flow<LocalDate?> = flow { emit(historyStart) }
 
@@ -230,21 +344,22 @@ class CalendarViewModelTest {
         override suspend fun save(activities: List<Activity>): Int = 0
     }
 
-    /** Fails the first read, then hands over to [thenReturns] if there is one. */
+    /**
+     * Fails the first read of every range it is asked for, then hands over to [thenReturns]
+     * if there is one.
+     */
     private class FailingRepository(
         private val thenReturns: ActivityRepository? = null,
     ) : ActivityRepository {
 
-        private var failed = false
+        private val failed = mutableSetOf<Pair<LocalDate, LocalDate>>()
 
         override fun observeRange(from: LocalDate, toExclusive: LocalDate): Flow<List<Activity>> =
             flow {
-                if (failed) {
-                    thenReturns?.observeRange(from, toExclusive)?.collect { emit(it) }
-                } else {
-                    failed = true
+                if (failed.add(from to toExclusive)) {
                     throw IllegalStateException("database is not readable")
                 }
+                thenReturns?.observeRange(from, toExclusive)?.collect { emit(it) }
             }
 
         override fun observeHistoryStart(): Flow<LocalDate?> =
