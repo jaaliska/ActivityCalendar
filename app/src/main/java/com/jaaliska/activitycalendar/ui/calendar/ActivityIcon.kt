@@ -46,7 +46,7 @@ private fun ActivityType.iconRes(): Int = when (this) {
 
 // The name the interface gives the type; UNKNOWN is called Other there.
 @StringRes
-private fun ActivityType.labelRes(): Int = when (this) {
+internal fun ActivityType.labelRes(): Int = when (this) {
     ActivityType.BADMINTON -> R.string.activity_badminton
     ActivityType.CYCLING -> R.string.activity_cycling
     ActivityType.RUNNING -> R.string.activity_running

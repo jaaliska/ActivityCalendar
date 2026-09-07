@@ -56,6 +56,7 @@ fun CalendarScreen(
     anchor: YearMonth,
     syncStopped: Boolean,
     onMonthSettled: (YearMonth) -> Unit,
+    onDaySelected: (LocalDate) -> Unit,
     onSettingsClick: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
@@ -106,6 +107,7 @@ fun CalendarScreen(
                     state = state,
                     anchor = anchor,
                     onMonthSettled = onMonthSettled,
+                    onDaySelected = onDaySelected,
                     onImportClick = onImportClick,
                 )
             }
@@ -119,6 +121,7 @@ private fun MonthPager(
     state: CalendarUiState.Calendar,
     anchor: YearMonth,
     onMonthSettled: (YearMonth) -> Unit,
+    onDaySelected: (LocalDate) -> Unit,
     onImportClick: () -> Unit,
 ) {
     val pagerState = rememberPagerState(initialPage = ANCHOR_PAGE) { PAGE_COUNT }
@@ -151,9 +154,16 @@ private fun MonthPager(
         Column {
             MonthGrid(
                 weeks = monthPage.weeks,
+                selectedDay = state.selectedDay,
+                onDayClick = onDaySelected,
                 modifier = Modifier.padding(horizontal = 6.dp),
             )
             monthPage.historyStart?.let { HistoryStart(it, onImportClick) }
+            DayPanel(
+                selectedDay = state.selectedDay,
+                activities = state.selectedDayActivities(),
+                recent = state.recent,
+            )
         }
     }
 
