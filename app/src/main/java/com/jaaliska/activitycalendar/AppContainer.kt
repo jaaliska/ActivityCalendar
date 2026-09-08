@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.room.Room
 import com.jaaliska.activitycalendar.data.csv.GarminCsvParser
+import com.jaaliska.activitycalendar.data.csv.GarminCsvWriter
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.file.AssetDemoDataFile
 import com.jaaliska.activitycalendar.data.file.ContentFileSource
@@ -21,6 +22,7 @@ import com.jaaliska.activitycalendar.domain.ImportHistory
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.ExportActivities
 import com.jaaliska.activitycalendar.domain.usecase.ImportActivities
 import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
@@ -66,6 +68,11 @@ class AppContainer(context: Context) {
         repository = activityRepository,
         parser = csvParser,
         file = demoDataFile,
+    )
+
+    val exportActivities = ExportActivities(
+        repository = activityRepository,
+        writer = GarminCsvWriter(),
     )
 
     val fileSource: FileSource = ContentFileSource(context.contentResolver)

@@ -71,6 +71,8 @@ fun AppNavHost(
                         appearanceSettings = container.appearanceSettings,
                         getHealthConnectStatus = container.getHealthConnectStatus,
                         loadDemoData = container.loadDemoData,
+                        exportActivities = container.exportActivities,
+                        fileSource = container.fileSource,
                     )
                 },
             )
@@ -84,6 +86,8 @@ fun AppNavHost(
                 onColorSchemeClick = settingsViewModel::selectColorScheme,
                 onDemoLoadClick = settingsViewModel::loadDemo,
                 onDemoRemoveClick = settingsViewModel::removeDemo,
+                onExport = settingsViewModel::export,
+                onExportShown = settingsViewModel::exportShown,
                 onScreenResumed = settingsViewModel::refresh,
             )
         }

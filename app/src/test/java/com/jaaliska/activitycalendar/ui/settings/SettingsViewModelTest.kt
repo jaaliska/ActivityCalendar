@@ -1,9 +1,11 @@
 package com.jaaliska.activitycalendar.ui.settings
 
 import android.content.Context
+import android.net.Uri
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.jaaliska.activitycalendar.data.csv.GarminCsvParser
+import com.jaaliska.activitycalendar.data.csv.GarminCsvWriter
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.file.AssetDemoDataFile
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
@@ -13,6 +15,7 @@ import com.jaaliska.activitycalendar.domain.FakeAppearanceSettings
 import com.jaaliska.activitycalendar.domain.FakeImportHistory
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.usecase.ExportActivities
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
 import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import kotlinx.coroutines.Dispatchers
@@ -28,12 +31,19 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.jaaliska.activitycalendar.ui.file.FileSource
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 
 @RunWith(RobolectricTestRunner::class)
 class SettingsViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val appearance = FakeAppearanceSettings()
+    private val exportTarget = RecordingFileSource()
 
     private lateinit var database: AppDatabase
     private lateinit var repository: ActivityRepository
@@ -79,6 +89,32 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `exporting writes every stored activity into the picked file`() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        viewModel.loadDemo()
+        val loaded = viewModel.state.first { it.demoActivities > 0 }
+
+        viewModel.export(Uri.parse("content://export/history.csv"))
+
+        val export = viewModel.state.first { it.export != null }.export
+        assertEquals(ExportResult.Done(loaded.demoActivities), export)
+        assertEquals(
+            loaded.demoActivities,
+            exportTarget.written().lineSequence().filter { it.isNotBlank() }.count() - 1,
+        )
+    }
+
+    @Test
+    fun `an unwritable file is reported as a failed export`() = runTest(dispatcher) {
+        exportTarget.failing = true
+        val viewModel = viewModel()
+
+        viewModel.export(Uri.parse("content://export/history.csv"))
+
+        assertEquals(ExportResult.Failed, viewModel.state.first { it.export != null }.export)
+    }
+
+    @Test
     fun `the demo row counts the samples and empties when they are removed`() = runTest(dispatcher) {
         val viewModel = viewModel()
 
@@ -92,6 +128,23 @@ class SettingsViewModelTest {
         assertEquals(0, removed.demoActivities)
     }
 
+    /** A file the export writes into, kept in memory. */
+    private class RecordingFileSource : FileSource {
+
+        var failing = false
+
+        private val file = ByteArrayOutputStream()
+
+        fun written(): String = file.toString(Charsets.UTF_8.name())
+
+        override fun openForWriting(uri: Uri): OutputStream =
+            if (failing) throw IOException("no room on the device") else file
+
+        override fun open(uri: Uri): InputStream = ByteArrayInputStream(file.toByteArray())
+
+        override fun displayName(uri: Uri): String = "history.csv"
+    }
+
     private fun viewModel() = SettingsViewModel(
         importHistory = FakeImportHistory(),
         repository = repository,
@@ -101,5 +154,8 @@ class SettingsViewModelTest {
             FakeHealthConnectSyncState(),
         ),
         loadDemoData = loadDemoData,
+        exportActivities = ExportActivities(repository, GarminCsvWriter()),
+        fileSource = exportTarget,
+        ioDispatcher = dispatcher,
     )
 }

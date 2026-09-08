@@ -347,6 +347,8 @@ class CalendarViewModelTest {
 
         override fun observeHistoryStart(): Flow<LocalDate?> = flow { emit(historyStart) }
 
+        override suspend fun getAll(): List<Activity> = emptyList()
+
         override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
 
         override suspend fun getMonth(month: YearMonth): List<Activity> = activities
@@ -376,6 +378,8 @@ class CalendarViewModelTest {
 
         override fun observeHistoryStart(): Flow<LocalDate?> =
             thenReturns?.observeHistoryStart() ?: flow { emit(null) }
+
+        override suspend fun getAll(): List<Activity> = emptyList()
 
         override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
 

@@ -99,6 +99,14 @@
         <item quantity="other">%d sample workouts</item>
     </plurals>
     <string name="settings_demo_remove">Remove</string>
+    <string name="settings_export_title">Export my history</string>
+    <string name="settings_export_subtitle">Save a CSV this app can import back</string>
+    <string name="settings_export_file_name">activity-calendar-%1$s.csv</string>
+    <plurals name="settings_export_done">
+        <item quantity="one">Exported %d activity</item>
+        <item quantity="other">Exported %d activities</item>
+    </plurals>
+    <string name="settings_export_failed">Export failed, the file was not written</string>
     <string name="settings_color_scheme_title">Color scheme</string>
     <string name="settings_color_scheme_crimson">Crimson</string>
     <string name="settings_color_scheme_blue">Blue</string>

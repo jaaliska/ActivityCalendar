@@ -26,6 +26,10 @@ interface ActivityDao {
     )
     suspend fun getInRange(fromInclusive: String, toExclusive: String): List<ActivityEntity>
 
+    /** Returns every stored activity, oldest first. */
+    @Query("SELECT * FROM activities ORDER BY startTimeLocal, id")
+    suspend fun getAll(): List<ActivityEntity>
+
     /** Emits how many stored activities came from [source]. */
     @Query("SELECT COUNT(*) FROM activities WHERE source = :source")
     fun observeCountOfSource(source: String): Flow<Int>

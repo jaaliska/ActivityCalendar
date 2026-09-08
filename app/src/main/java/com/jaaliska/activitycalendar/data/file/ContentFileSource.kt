@@ -6,11 +6,15 @@ import android.provider.OpenableColumns
 import com.jaaliska.activitycalendar.ui.file.FileSource
 import java.io.FileNotFoundException
 import java.io.InputStream
+import java.io.OutputStream
 
 class ContentFileSource(private val contentResolver: ContentResolver) : FileSource {
 
     override fun open(uri: Uri): InputStream =
         contentResolver.openInputStream(uri) ?: throw FileNotFoundException(uri.toString())
+
+    override fun openForWriting(uri: Uri): OutputStream =
+        contentResolver.openOutputStream(uri, "wt") ?: throw FileNotFoundException(uri.toString())
 
     override fun displayName(uri: Uri): String {
         val columns = arrayOf(OpenableColumns.DISPLAY_NAME)

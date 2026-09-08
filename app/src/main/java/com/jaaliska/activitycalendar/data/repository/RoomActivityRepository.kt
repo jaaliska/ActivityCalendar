@@ -28,6 +28,8 @@ class RoomActivityRepository(private val database: AppDatabase) : ActivityReposi
     override fun observeHistoryStart(): Flow<LocalDate?> =
         dao.observeEarliestStart().map { it?.toLocalDateTimeOrThrow()?.toLocalDate() }
 
+    override suspend fun getAll(): List<Activity> = dao.getAll().map { it.toDomain() }
+
     override fun observeCountFrom(source: ActivitySourceType): Flow<Int> =
         dao.observeCountOfSource(source.name)
 

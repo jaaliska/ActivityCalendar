@@ -19,6 +19,9 @@ interface ActivityRepository {
     /** Emits how many stored activities came from [source]. */
     fun observeCountFrom(source: ActivitySourceType): Flow<Int>
 
+    /** Returns every stored activity, oldest first. */
+    suspend fun getAll(): List<Activity>
+
     /** Returns the activities of [month], oldest first. */
     suspend fun getMonth(month: YearMonth): List<Activity>
 

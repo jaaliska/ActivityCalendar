@@ -1,5 +1,8 @@
 package com.jaaliska.activitycalendar.ui.settings
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,9 +21,13 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
+import com.jaaliska.activitycalendar.ui.UI_FILE_DATE
 import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
@@ -49,14 +57,25 @@ fun SettingsScreen(
     onColorSchemeClick: (ColorSchemeChoice) -> Unit,
     onDemoLoadClick: () -> Unit,
     onDemoRemoveClick: () -> Unit,
+    onExport: (Uri) -> Unit,
+    onExportShown: () -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OnResume(onScreenResumed)
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val exportName = stringResource(R.string.settings_export_file_name, LocalDate.now().format(UI_FILE_DATE))
+    val exportPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(CSV_MIME_TYPE),
+    ) { uri -> if (uri != null) onExport(uri) }
+
+    ExportSnackbar(state.export, snackbarHostState, onExportShown)
+
     Scaffold(
         modifier = modifier,
         topBar = { DetailTopBar(title = stringResource(R.string.settings_title), onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -100,6 +119,14 @@ fun SettingsScreen(
                 )
             }
 
+            RowDivider()
+            SettingsRow(
+                title = stringResource(R.string.settings_export_title),
+                subtitle = stringResource(R.string.settings_export_subtitle),
+                onClick = { exportPicker.launch(exportName) },
+                trailing = {},
+            )
+
             SectionHeader(stringResource(R.string.settings_section_appearance))
 
             SettingsRow(
@@ -109,6 +136,27 @@ fun SettingsScreen(
                     SchemeCircles(selected = state.colorScheme, onSelect = onColorSchemeClick)
                 },
             )
+        }
+    }
+}
+
+@Composable
+private fun ExportSnackbar(
+    export: ExportResult?,
+    snackbarHostState: SnackbarHostState,
+    onShown: () -> Unit,
+) {
+    val message = when (export) {
+        is ExportResult.Done ->
+            pluralStringResource(R.plurals.settings_export_done, export.activities, export.activities)
+
+        ExportResult.Failed -> stringResource(R.string.settings_export_failed)
+        null -> null
+    }
+    LaunchedEffect(export) {
+        if (message != null) {
+            snackbarHostState.showSnackbar(message)
+            onShown()
         }
     }
 }
@@ -228,3 +276,5 @@ private fun schemeName(choice: ColorSchemeChoice): Int = when (choice) {
 private fun RowDivider() {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 }
+
+private const val CSV_MIME_TYPE = "text/csv"

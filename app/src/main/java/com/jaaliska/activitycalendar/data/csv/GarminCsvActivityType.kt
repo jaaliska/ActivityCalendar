@@ -17,3 +17,19 @@ internal fun garminCsvActivityTypeOf(raw: String?): ActivityType = when (raw?.tr
     "yoga" -> ActivityType.YOGA
     else -> ActivityType.UNKNOWN
 }
+
+/**
+ * Names a domain type the way a Garmin export does.
+ *
+ * @return the `Activity Type` value; [ActivityType.UNKNOWN] becomes `Other`, which reads back
+ * as unknown again
+ */
+internal fun garminCsvNameOf(type: ActivityType): String = when (type) {
+    ActivityType.BADMINTON -> "Badminton"
+    ActivityType.CYCLING -> "Cycling"
+    ActivityType.RUNNING -> "Running"
+    ActivityType.STRENGTH_TRAINING -> "Strength Training"
+    ActivityType.WALKING -> "Walking"
+    ActivityType.YOGA -> "Yoga"
+    ActivityType.UNKNOWN -> "Other"
+}
