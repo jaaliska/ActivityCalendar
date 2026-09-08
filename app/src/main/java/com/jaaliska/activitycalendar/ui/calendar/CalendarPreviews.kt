@@ -62,6 +62,34 @@ private fun GreenPreview() = PreviewScreen(null, scheme = ColorSchemeChoice.GREE
 @Composable
 private fun GreenDarkPreview() = PreviewScreen(null, ColorSchemeChoice.GREEN, dark = true)
 
+/** The whole screen in landscape, where it has to scroll to show the panel. */
+@Preview(name = "Landscape", widthDp = 844, heightDp = 390)
+@Composable
+private fun LandscapePreview() {
+    ActivityCalendarTheme {
+        CalendarScreen(
+            state = CalendarUiState.Calendar(
+                today = TODAY,
+                pages = mapOf(
+                    YearMonth.of(2026, 9) to MonthPage(YearMonth.of(2026, 9), previewWeeks()),
+                ),
+                recent = previewRecent(),
+            ),
+            anchor = YearMonth.of(2026, 9),
+            syncStopped = false,
+            onMonthSettled = {},
+            onDaySelected = {},
+            onTodayClick = {},
+            onSettingsClick = {},
+            onImportClick = {},
+            onHealthConnectClick = {},
+            onDemoClick = {},
+            onRetry = {},
+            onScreenResumed = {},
+        )
+    }
+}
+
 @Composable
 private fun PreviewScreen(
     selectedDay: LocalDate?,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -86,36 +89,46 @@ fun CalendarScreen(
             )
         },
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            if (syncStopped) {
-                SyncStoppedBanner(onFixClick = onHealthConnectClick)
+        // Six rows of grid and a panel do not fit a landscape screen, so a short screen scrolls.
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            val screenScrolls = maxHeight < TALL_ENOUGH
+            val scroll = if (screenScrolls) {
+                Modifier.verticalScroll(rememberScrollState())
+            } else {
+                Modifier
             }
-
-            when (state) {
-                // The month row is hidden, not disabled: there is no calendar to page through yet.
-                CalendarUiState.NoData -> NoDataState(
-                    onImportClick = onImportClick,
-                    onHealthConnectClick = onHealthConnectClick,
-                    onDemoClick = onDemoClick,
-                )
-
-                is CalendarUiState.Failed -> {
-                    MonthRow(month = state.month)
-                    LoadErrorState(onRetry = onRetry)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(scroll),
+            ) {
+                if (syncStopped) {
+                    SyncStoppedBanner(onFixClick = onHealthConnectClick)
                 }
 
-                is CalendarUiState.Calendar -> MonthPager(
-                    state = state,
-                    anchor = anchor,
-                    onMonthSettled = onMonthSettled,
-                    onDaySelected = onDaySelected,
-                    onTodayClick = onTodayClick,
-                    onImportClick = onImportClick,
-                )
+                when (state) {
+                    // The month row is hidden, not disabled: there is no calendar to page yet.
+                    CalendarUiState.NoData -> NoDataState(
+                        onImportClick = onImportClick,
+                        onHealthConnectClick = onHealthConnectClick,
+                        onDemoClick = onDemoClick,
+                    )
+
+                    is CalendarUiState.Failed -> {
+                        MonthRow(month = state.month)
+                        LoadErrorState(onRetry = onRetry)
+                    }
+
+                    is CalendarUiState.Calendar -> MonthPager(
+                        state = state,
+                        anchor = anchor,
+                        panelScrolls = !screenScrolls,
+                        onMonthSettled = onMonthSettled,
+                        onDaySelected = onDaySelected,
+                        onTodayClick = onTodayClick,
+                        onImportClick = onImportClick,
+                    )
+                }
             }
         }
     }
@@ -126,6 +139,7 @@ fun CalendarScreen(
 private fun MonthPager(
     state: CalendarUiState.Calendar,
     anchor: YearMonth,
+    panelScrolls: Boolean,
     onMonthSettled: (YearMonth) -> Unit,
     onDaySelected: (LocalDate) -> Unit,
     onTodayClick: () -> Unit,
@@ -175,6 +189,7 @@ private fun MonthPager(
         selectedDay = state.selectedDay,
         activities = state.selectedDayActivities,
         recent = state.recent,
+        scrollable = panelScrolls,
     )
 
     if (pickerShown) {
@@ -316,3 +331,6 @@ private val BANNER_SHAPE = RoundedCornerShape(12.dp)
 
 // The longest month name the row has to hold; the digits stand in for any year.
 private const val WIDEST_MONTH = "September 0000"
+
+/** Below this the calendar does not fit at all, and the screen has to scroll. */
+private val TALL_ENOUGH = 600.dp
