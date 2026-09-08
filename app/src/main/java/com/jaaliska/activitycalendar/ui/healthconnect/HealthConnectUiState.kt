@@ -42,3 +42,11 @@ sealed interface HealthConnectUiState {
      */
     data class SyncFailed(val failedAt: Instant, val lastSync: Instant?) : HealthConnectUiState
 }
+
+/**
+ * What a synchronisation the user started did, so the screen can say it out loud.
+ *
+ * @property added how many workouts were not stored before
+ * @property removed how many stored workouts Health Connect no longer has
+ */
+data class SyncOutcome(val added: Int, val removed: Int)

@@ -119,13 +119,18 @@ fun AppNavHost(
                 },
             )
             val healthConnectState by healthConnectViewModel.state.collectAsState()
+            val refreshing by healthConnectViewModel.refreshing.collectAsState()
+            val syncOutcome by healthConnectViewModel.syncOutcome.collectAsState()
 
             HealthConnectScreen(
                 state = healthConnectState,
+                refreshing = refreshing,
+                syncOutcome = syncOutcome,
                 permissions = healthConnectViewModel.permissions,
                 onPermissionsResult = healthConnectViewModel::onPermissionsRequested,
                 onSyncNow = healthConnectViewModel::sync,
                 onRebuild = healthConnectViewModel::rebuild,
+                onSyncOutcomeShown = healthConnectViewModel::syncOutcomeShown,
                 onScreenResumed = healthConnectViewModel::refresh,
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onBack = { navController.popBackStack() },

@@ -169,6 +169,16 @@
     <string name="health_connect_last_sync">Last sync %1$s</string>
     <string name="health_connect_sync_now">Sync now</string>
     <string name="health_connect_rebuild">Rebuild from Health Connect</string>
+    <string name="health_connect_sync_up_to_date">Already up to date</string>
+    <plurals name="health_connect_sync_added">
+        <item quantity="one">%d new workout</item>
+        <item quantity="other">%d new workouts</item>
+    </plurals>
+    <plurals name="health_connect_sync_removed">
+        <item quantity="one">%d workout removed</item>
+        <item quantity="other">%d workouts removed</item>
+    </plurals>
+    <string name="health_connect_sync_added_and_removed">%1$s, %2$s</string>
     <string name="health_connect_rebuild_title">Rebuild from Health Connect?</string>
     <string name="health_connect_rebuild_text">The whole history is read again. Workouts Health Connect no longer has disappear from the calendar; what you imported from CSV stays.</string>
     <string name="health_connect_rebuild_confirm">Rebuild</string>
