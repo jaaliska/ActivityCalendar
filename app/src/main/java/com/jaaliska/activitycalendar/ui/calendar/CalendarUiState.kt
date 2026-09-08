@@ -23,6 +23,7 @@ sealed interface CalendarUiState {
      * @property reading the read is taking long enough to be worth a progress line
      * @property selectedDay the day whose activities the panel shows, null while it shows
      * the last seven days instead
+     * @property selectedDayActivities what that day holds, empty when it holds nothing
      * @property recent the last seven days, null until they have been read
      */
     data class Calendar(
@@ -30,20 +31,12 @@ sealed interface CalendarUiState {
         val pages: Map<YearMonth, MonthPage> = emptyMap(),
         val reading: Boolean = false,
         val selectedDay: LocalDate? = null,
+        val selectedDayActivities: List<Activity> = emptyList(),
         val recent: PeriodSummary? = null,
     ) : CalendarUiState {
 
         /** [month] as it should be drawn: an empty grid while it has not been read yet. */
         fun page(month: YearMonth): MonthPage = pages[month] ?: emptyPage(month, today)
-
-        /** The activities of the selected day, empty when it holds none or none is selected. */
-        fun selectedDayActivities(): List<Activity> {
-            val day = selectedDay ?: return emptyList()
-            return pages.values
-                .firstNotNullOfOrNull { page -> page.day(day)?.takeIf { it.inMonth } }
-                ?.activities
-                .orEmpty()
-        }
     }
 }
 
@@ -58,10 +51,7 @@ data class MonthPage(
     val month: YearMonth,
     val weeks: List<List<CalendarDay>>,
     val historyStart: LocalDate? = null,
-) {
-    /** [date] as this page draws it, null when the page does not reach that far. */
-    fun day(date: LocalDate): CalendarDay? = weeks.flatten().firstOrNull { it.date == date }
-}
+)
 
 /**
  * One cell of the grid.

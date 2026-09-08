@@ -212,26 +212,25 @@ class CalendarViewModelTest {
     }
 
     @Test
-    fun `leaving the month drops the picked day`() = runTest(dispatcher) {
-        val viewModel = running(FakeRepository(historyStart = HISTORY_START))
+    fun `the picked day stays picked however far the calendar is paged away`() =
+        runTest(dispatcher) {
+            val repository = FakeRepository(
+                activities = listOf(activity("2026-08-16T07:20:00", ActivityType.RUNNING)),
+                historyStart = HISTORY_START,
+            )
+            val viewModel = running(repository)
 
-        viewModel.selectDay(LocalDate.of(2026, 8, 16))
-        viewModel.showMonth(YearMonth.of(2026, 9))
-        advanceUntilIdle()
+            viewModel.selectDay(LocalDate.of(2026, 8, 16))
+            viewModel.showMonth(YearMonth.of(2027, 3))
+            advanceUntilIdle()
 
-        assertNull(calendarOf(viewModel).selectedDay)
-    }
-
-    @Test
-    fun `settling on the month already shown keeps the picked day`() = runTest(dispatcher) {
-        val viewModel = running(FakeRepository(historyStart = HISTORY_START))
-
-        viewModel.selectDay(LocalDate.of(2026, 8, 16))
-        viewModel.showMonth(august)
-        advanceUntilIdle()
-
-        assertEquals(LocalDate.of(2026, 8, 16), calendarOf(viewModel).selectedDay)
-    }
+            val state = calendarOf(viewModel)
+            assertEquals(LocalDate.of(2026, 8, 16), state.selectedDay)
+            assertEquals(
+                listOf(ActivityType.RUNNING),
+                state.selectedDayActivities.map { it.type },
+            )
+        }
 
     @Test
     fun `the picked day carries its activities, earliest first`() = runTest(dispatcher) {
@@ -249,7 +248,7 @@ class CalendarViewModelTest {
 
         assertEquals(
             listOf(ActivityType.RUNNING, ActivityType.STRENGTH_TRAINING),
-            calendarOf(viewModel).selectedDayActivities().map { it.type },
+            calendarOf(viewModel).selectedDayActivities.map { it.type },
         )
     }
 
@@ -266,7 +265,7 @@ class CalendarViewModelTest {
 
         assertEquals(
             listOf(ActivityType.BADMINTON),
-            calendarOf(viewModel).selectedDayActivities().map { it.type },
+            calendarOf(viewModel).selectedDayActivities.map { it.type },
         )
     }
 
@@ -318,6 +317,7 @@ class CalendarViewModelTest {
     private fun viewModelOn(repository: ActivityRepository) = CalendarViewModel(
         observeCalendarMonths = ObserveCalendarMonths(repository),
         observeRecentSummary = ObserveRecentSummary(repository),
+        repository = repository,
         getHealthConnectStatus = neverConnected,
         clock = clock,
     )

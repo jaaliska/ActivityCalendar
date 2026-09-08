@@ -34,12 +34,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
@@ -57,6 +59,7 @@ fun CalendarScreen(
     syncStopped: Boolean,
     onMonthSettled: (YearMonth) -> Unit,
     onDaySelected: (LocalDate) -> Unit,
+    onTodayClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
@@ -108,6 +111,7 @@ fun CalendarScreen(
                     anchor = anchor,
                     onMonthSettled = onMonthSettled,
                     onDaySelected = onDaySelected,
+                    onTodayClick = onTodayClick,
                     onImportClick = onImportClick,
                 )
             }
@@ -122,6 +126,7 @@ private fun MonthPager(
     anchor: YearMonth,
     onMonthSettled: (YearMonth) -> Unit,
     onDaySelected: (LocalDate) -> Unit,
+    onTodayClick: () -> Unit,
     onImportClick: () -> Unit,
 ) {
     val pagerState = rememberPagerState(initialPage = ANCHOR_PAGE) { PAGE_COUNT }
@@ -142,30 +147,33 @@ private fun MonthPager(
         onPrevious = { scope.launch { pagerState.animateScrollToPage(pagerState.targetPage - 1) } },
         onNext = { scope.launch { pagerState.animateScrollToPage(pagerState.targetPage + 1) } },
         onPickMonth = { pickerShown = true },
-        onToday = { scope.launch { pagerState.animateScrollToPage(ANCHOR_PAGE) } },
+        onToday = {
+            onTodayClick()
+            scope.launch { pagerState.animateScrollToPage(ANCHOR_PAGE) }
+        },
     )
 
     HorizontalPager(
         state = pagerState,
         verticalAlignment = Alignment.Top,
         beyondViewportPageCount = 1,
+        modifier = Modifier.height(MONTH_GRID_HEIGHT),
     ) { page ->
-        val monthPage = state.page(monthAt(page, anchor))
-        Column {
-            MonthGrid(
-                weeks = monthPage.weeks,
-                selectedDay = state.selectedDay,
-                onDayClick = onDaySelected,
-                modifier = Modifier.padding(horizontal = 6.dp),
-            )
-            monthPage.historyStart?.let { HistoryStart(it, onImportClick) }
-            DayPanel(
-                selectedDay = state.selectedDay,
-                activities = state.selectedDayActivities(),
-                recent = state.recent,
-            )
-        }
+        MonthGrid(
+            weeks = state.page(monthAt(page, anchor)).weeks,
+            selectedDay = state.selectedDay,
+            onDayClick = onDaySelected,
+            modifier = Modifier.padding(horizontal = 6.dp),
+        )
     }
+
+    state.page(shownMonth).historyStart?.let { HistoryStart(it, onImportClick) }
+
+    DayPanel(
+        selectedDay = state.selectedDay,
+        activities = state.selectedDayActivities,
+        recent = state.recent,
+    )
 
     if (pickerShown) {
         MonthYearDialog(
@@ -240,22 +248,7 @@ private fun MonthRow(
 /** Above the month while Health Connect has stopped filling it: what happened, and where to fix it. */
 @Composable
 private fun SyncStoppedBanner(onFixClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
-            .clickable(onClick = onFixClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_sync_disabled),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp),
-        )
+    Banner(icon = R.drawable.ic_sync_disabled, onClick = onFixClick) {
         Text(
             text = stringResource(R.string.calendar_sync_banner),
             style = MaterialTheme.typography.bodyMedium,
@@ -273,27 +266,51 @@ private fun SyncStoppedBanner(onFixClick: () -> Unit) {
 /** Under a month earlier than anything stored: what the history is, and how to extend it. */
 @Composable
 private fun HistoryStart(start: LocalDate, onImportClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 24.dp, start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.calendar_history_start, start.format(UI_DATE)),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = stringResource(R.string.calendar_add_older_history),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.clickable(onClick = onImportClick),
-        )
+    Banner(icon = R.drawable.ic_schedule, onClick = onImportClick) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.calendar_history_start, start.format(UI_DATE)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Text(
+                text = stringResource(R.string.calendar_add_older_history),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
 }
+
+/** The plaque the calendar says things with: an icon, the message and a way to act on it. */
+@Composable
+private fun Banner(
+    @DrawableRes icon: Int,
+    onClick: () -> Unit,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(BANNER_SHAPE)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp),
+        )
+        content()
+    }
+}
+
+private val BANNER_SHAPE = RoundedCornerShape(12.dp)
 
 // The longest month name the row has to hold; the digits stand in for any year.
 private const val WIDEST_MONTH = "September 0000"

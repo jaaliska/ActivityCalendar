@@ -2,6 +2,8 @@ package com.jaaliska.activitycalendar.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jaaliska.activitycalendar.domain.Activity
+import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.domain.usecase.CalendarWindow
 import com.jaaliska.activitycalendar.domain.usecase.DayActivities
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.scan
@@ -38,6 +41,7 @@ import java.time.YearMonth
 class CalendarViewModel(
     private val observeCalendarMonths: ObserveCalendarMonths,
     private val observeRecentSummary: ObserveRecentSummary,
+    private val repository: ActivityRepository,
     private val getHealthConnectStatus: GetHealthConnectStatus,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
@@ -53,7 +57,7 @@ class CalendarViewModel(
 
     val state: StateFlow<CalendarUiState> = combine(
         reads().scan(CalendarUiState.Calendar(today) as CalendarUiState, ::merge),
-        selectedDay,
+        selections(),
         recentSummaries(),
         ::withPanel,
     )
@@ -81,14 +85,17 @@ class CalendarViewModel(
 
     /** Says which month the pager has settled on, so its neighbours are read as well. */
     fun showMonth(month: YearMonth) {
-        if (requests.value.month == month) return
         requests.value = requests.value.copy(month = month)
-        selectedDay.value = null
     }
 
     /** Picks the day the panel describes; picking the day already picked shows the period again. */
     fun selectDay(date: LocalDate) {
         selectedDay.value = date.takeIf { it != selectedDay.value }
+    }
+
+    /** Drops the picked day, so the panel goes back to the last seven days. */
+    fun clearDaySelection() {
+        selectedDay.value = null
     }
 
     /** Reads the months again after a failure, without restarting the app. */
@@ -108,14 +115,31 @@ class CalendarViewModel(
 
     private fun withPanel(
         state: CalendarUiState,
-        day: LocalDate?,
+        selection: Selection,
         recent: PeriodSummary?,
     ): CalendarUiState =
         if (state is CalendarUiState.Calendar) {
-            state.copy(selectedDay = day, recent = recent)
+            state.copy(
+                selectedDay = selection.day,
+                selectedDayActivities = selection.activities,
+                recent = recent,
+            )
         } else {
             state
         }
+
+    // The picked day is read on its own, not taken from the months on screen: it stays picked
+    // however far the calendar is paged away from it.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun selections(): Flow<Selection> = selectedDay.flatMapLatest { day ->
+        if (day == null) {
+            flowOf(Selection())
+        } else {
+            repository.observeRange(day, day.plusDays(1))
+                .map { activities -> Selection(day, activities) }
+                .catch { emit(Selection(day)) }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun recentSummaries(): Flow<PeriodSummary?> = requests
@@ -173,6 +197,12 @@ class CalendarViewModel(
 
     /** What the state is being read for: a month to show, and which attempt at it this is. */
     private data class Request(val month: YearMonth, val attempt: Int)
+
+    /** The picked day together with what it holds, so the panel never shows one without the other. */
+    private data class Selection(
+        val day: LocalDate? = null,
+        val activities: List<Activity> = emptyList(),
+    )
 
     /** One step of a read: the answer if it has arrived, and whether it is taking long. */
     private data class Read(val answer: CalendarUiState?, val slow: Boolean)

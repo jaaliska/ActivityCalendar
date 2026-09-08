@@ -38,6 +38,7 @@ fun AppNavHost(
                     CalendarViewModel(
                         observeCalendarMonths = container.observeCalendarMonths,
                         observeRecentSummary = container.observeRecentSummary,
+                        repository = container.activityRepository,
                         getHealthConnectStatus = container.getHealthConnectStatus,
                     )
                 },
@@ -51,6 +52,7 @@ fun AppNavHost(
                 syncStopped = syncStopped,
                 onMonthSettled = calendarViewModel::showMonth,
                 onDaySelected = calendarViewModel::selectDay,
+                onTodayClick = calendarViewModel::clearDaySelection,
                 onSettingsClick = { navController.navigate(Destination.SETTINGS.route) },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },

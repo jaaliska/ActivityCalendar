@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
+import com.jaaliska.activitycalendar.domain.calendar.WEEKS_IN_GRID
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -59,8 +60,11 @@ fun MonthGrid(
 @Composable
 private fun WeekdayRow() {
     Row(
-        modifier = Modifier.padding(bottom = 2.dp),
+        modifier = Modifier
+            .height(WEEKDAY_ROW_HEIGHT)
+            .padding(bottom = WEEKDAY_ROW_GAP),
         horizontalArrangement = Arrangement.spacedBy(CELL_GAP),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         DayOfWeek.entries.forEach { day ->
             Text(
@@ -142,8 +146,14 @@ private fun ActivityMarks(day: CalendarDay, modifier: Modifier = Modifier) {
 
 private val CELL_HEIGHT = 56.dp
 private val CELL_GAP = 1.dp
+private val WEEKDAY_ROW_HEIGHT = 18.dp
+private val WEEKDAY_ROW_GAP = 2.dp
 private val CELL_SHAPE = RoundedCornerShape(8.dp)
 private val SINGLE_ICON = 18.dp
 private val STACKED_ICON = 16.dp
 private const val MAX_ICONS = 2
 private const val ADJACENT_MONTH_ALPHA = 0.45f
+
+/** What the grid takes on screen, six rows whatever the month, so nothing under it moves. */
+val MONTH_GRID_HEIGHT = WEEKDAY_ROW_HEIGHT + CELL_HEIGHT * WEEKS_IN_GRID +
+    CELL_GAP * WEEKS_IN_GRID
