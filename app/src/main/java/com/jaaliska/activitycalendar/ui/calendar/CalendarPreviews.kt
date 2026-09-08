@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import com.jaaliska.activitycalendar.domain.ActivityType
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.calendar.gridWeeks
 import com.jaaliska.activitycalendar.domain.usecase.PeriodSummary
 import com.jaaliska.activitycalendar.domain.usecase.TypeTotals
@@ -37,9 +38,37 @@ private fun MonthWithEmptyDayPreview() = PreviewScreen(selectedDay = LocalDate.o
 @Composable
 private fun MonthDarkPreview() = PreviewScreen(selectedDay = null, dark = true)
 
+@Preview(name = "Crimson", widthDp = 390, heightDp = 844)
 @Composable
-private fun PreviewScreen(selectedDay: LocalDate?, dark: Boolean = false) {
-    ActivityCalendarTheme(darkTheme = dark) {
+private fun CrimsonPreview() = PreviewScreen(null, scheme = ColorSchemeChoice.CRIMSON)
+
+@Preview(name = "Crimson dark", widthDp = 390, heightDp = 844)
+@Composable
+private fun CrimsonDarkPreview() = PreviewScreen(null, ColorSchemeChoice.CRIMSON, dark = true)
+
+@Preview(name = "Orange", widthDp = 390, heightDp = 844)
+@Composable
+private fun OrangePreview() = PreviewScreen(null, scheme = ColorSchemeChoice.ORANGE)
+
+@Preview(name = "Orange dark", widthDp = 390, heightDp = 844)
+@Composable
+private fun OrangeDarkPreview() = PreviewScreen(null, ColorSchemeChoice.ORANGE, dark = true)
+
+@Preview(name = "Green", widthDp = 390, heightDp = 844)
+@Composable
+private fun GreenPreview() = PreviewScreen(null, scheme = ColorSchemeChoice.GREEN)
+
+@Preview(name = "Green dark", widthDp = 390, heightDp = 844)
+@Composable
+private fun GreenDarkPreview() = PreviewScreen(null, ColorSchemeChoice.GREEN, dark = true)
+
+@Composable
+private fun PreviewScreen(
+    selectedDay: LocalDate?,
+    scheme: ColorSchemeChoice = ColorSchemeChoice.BLUE,
+    dark: Boolean = false,
+) {
+    ActivityCalendarTheme(scheme = scheme, darkTheme = dark) {
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)

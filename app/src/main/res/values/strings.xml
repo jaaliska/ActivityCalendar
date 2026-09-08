@@ -94,7 +94,10 @@
     <string name="settings_demo_title">Demo data</string>
     <string name="settings_demo_subtitle">See the app without your own workouts</string>
     <string name="settings_color_scheme_title">Color scheme</string>
+    <string name="settings_color_scheme_crimson">Crimson</string>
     <string name="settings_color_scheme_blue">Blue</string>
+    <string name="settings_color_scheme_orange">Orange</string>
+    <string name="settings_color_scheme_green">Green</string>
 
     <string name="import_intro">Add your past workouts from a CSV file exported on Garmin Connect.</string>
     <string name="import_choose_file">Choose file</string>

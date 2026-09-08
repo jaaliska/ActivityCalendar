@@ -1,5 +1,6 @@
 package com.jaaliska.activitycalendar.ui.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,16 +22,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
 import com.jaaliska.activitycalendar.ui.components.OnResume
 import com.jaaliska.activitycalendar.ui.healthconnect.timeAgo
-import com.jaaliska.activitycalendar.ui.theme.SchemeSwatches
+import com.jaaliska.activitycalendar.ui.theme.swatch
 import java.time.LocalDate
 
 @Composable
@@ -39,6 +44,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
+    onColorSchemeClick: (ColorSchemeChoice) -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -76,8 +82,10 @@ fun SettingsScreen(
 
             SettingsRow(
                 title = stringResource(R.string.settings_color_scheme_title),
-                subtitle = stringResource(R.string.settings_color_scheme_blue),
-                trailing = { SchemeCircles(selected = BLUE_SCHEME) },
+                subtitle = stringResource(schemeName(state.colorScheme)),
+                trailing = {
+                    SchemeCircles(selected = state.colorScheme, onSelect = onColorSchemeClick)
+                },
             )
         }
     }
@@ -160,28 +168,41 @@ private fun SettingsRow(
 }
 
 @Composable
-private fun SchemeCircles(selected: Int) {
+private fun SchemeCircles(
+    selected: ColorSchemeChoice,
+    onSelect: (ColorSchemeChoice) -> Unit,
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SchemeSwatches.forEachIndexed { index, swatch ->
+        ColorSchemeChoice.entries.forEach { choice ->
+            val name = stringResource(schemeName(choice))
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background(color = swatch, shape = CircleShape)
+                    .clip(CircleShape)
+                    .background(color = choice.swatch)
                     .then(
-                        if (index != selected) {
+                        if (choice != selected) {
                             Modifier
                         } else {
                             Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                         },
-                    ),
+                    )
+                    .clickable(onClickLabel = name) { onSelect(choice) }
+                    .semantics { contentDescription = name },
             )
         }
     }
+}
+
+@StringRes
+private fun schemeName(choice: ColorSchemeChoice): Int = when (choice) {
+    ColorSchemeChoice.CRIMSON -> R.string.settings_color_scheme_crimson
+    ColorSchemeChoice.BLUE -> R.string.settings_color_scheme_blue
+    ColorSchemeChoice.ORANGE -> R.string.settings_color_scheme_orange
+    ColorSchemeChoice.GREEN -> R.string.settings_color_scheme_green
 }
 
 @Composable
 private fun RowDivider() {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 }
-
-private const val BLUE_SCHEME = 1

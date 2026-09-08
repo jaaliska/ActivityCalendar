@@ -1,5 +1,6 @@
 package com.jaaliska.activitycalendar.ui.settings
 
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import java.time.LocalDate
 
@@ -11,4 +12,5 @@ import java.time.LocalDate
 data class SettingsUiState(
     val lastImport: LocalDate? = null,
     val healthConnect: ConnectionStatus = ConnectionStatus.NeverConnected,
+    val colorScheme: ColorSchemeChoice = ColorSchemeChoice.BLUE,
 )

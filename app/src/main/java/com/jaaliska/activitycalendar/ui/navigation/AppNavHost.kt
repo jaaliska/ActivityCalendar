@@ -65,6 +65,7 @@ fun AppNavHost(
                 factory = viewModelFactoryOf {
                     SettingsViewModel(
                         importHistory = container.importHistory,
+                        appearanceSettings = container.appearanceSettings,
                         getHealthConnectStatus = container.getHealthConnectStatus,
                     )
                 },
@@ -76,6 +77,7 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
+                onColorSchemeClick = settingsViewModel::selectColorScheme,
                 onScreenResumed = settingsViewModel::refresh,
             )
         }

@@ -2,9 +2,11 @@ package com.jaaliska.activitycalendar.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jaaliska.activitycalendar.domain.AppearanceSettings
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
+import com.jaaliska.activitycalendar.domain.ImportHistory
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
-import com.jaaliska.activitycalendar.domain.ImportHistory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     importHistory: ImportHistory,
+    private val appearanceSettings: AppearanceSettings,
     private val getHealthConnectStatus: GetHealthConnectStatus,
 ) : ViewModel() {
 
@@ -22,7 +25,8 @@ class SettingsViewModel(
     val state: StateFlow<SettingsUiState> = combine(
         importHistory.lastImport,
         healthConnect,
-    ) { lastImport, connection -> SettingsUiState(lastImport, connection) }
+        appearanceSettings.colorScheme,
+    ) { lastImport, connection, scheme -> SettingsUiState(lastImport, connection, scheme) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -36,6 +40,10 @@ class SettingsViewModel(
     /** Asks again how Health Connect stands: it is connected and disconnected outside this screen. */
     fun refresh() {
         viewModelScope.launch { healthConnect.value = getHealthConnectStatus() }
+    }
+
+    fun selectColorScheme(choice: ColorSchemeChoice) {
+        viewModelScope.launch { appearanceSettings.setColorScheme(choice) }
     }
 
     private companion object {

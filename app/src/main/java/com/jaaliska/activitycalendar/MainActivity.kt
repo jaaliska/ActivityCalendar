@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.jaaliska.activitycalendar.data.healthconnect.HealthConnectSyncWorker
 import com.jaaliska.activitycalendar.ui.navigation.AppNavHost
 import com.jaaliska.activitycalendar.ui.navigation.Destination
@@ -25,7 +27,8 @@ class MainActivity : ComponentActivity() {
             Destination.CALENDAR
         }
         setContent {
-            ActivityCalendarTheme {
+            val scheme by container.colorScheme.collectAsState()
+            ActivityCalendarTheme(scheme = scheme) {
                 AppNavHost(container, startDestination)
             }
         }

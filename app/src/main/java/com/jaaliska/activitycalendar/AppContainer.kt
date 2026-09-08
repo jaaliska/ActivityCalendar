@@ -11,7 +11,10 @@ import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
 import com.jaaliska.activitycalendar.data.settings.DataStoreHealthConnectSyncState
 import com.jaaliska.activitycalendar.data.settings.DataStoreImportHistory
 import com.jaaliska.activitycalendar.data.settings.settingsDataStore
+import com.jaaliska.activitycalendar.data.settings.DataStoreAppearanceSettings
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.AppearanceSettings
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.ImportHistory
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
@@ -25,6 +28,9 @@ import com.jaaliska.activitycalendar.ui.file.FileSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Holds the objects that live as long as the app does. */
@@ -63,7 +69,13 @@ class AppContainer(context: Context) {
         syncState = healthConnectSyncState,
     )
 
+    val appearanceSettings: AppearanceSettings =
+        DataStoreAppearanceSettings(context.settingsDataStore)
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val colorScheme: StateFlow<ColorSchemeChoice> = appearanceSettings.colorScheme
+        .stateIn(scope, SharingStarted.Eagerly, ColorSchemeChoice.BLUE)
 
     /**
      * Reads Health Connect once, right after the app has been opened. It runs here and not in
