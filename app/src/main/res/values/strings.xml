@@ -36,7 +36,6 @@
     <string name="panel_column_activity">Activity</string>
     <string name="panel_column_distance">Distance</string>
     <string name="panel_column_time">Time</string>
-    <string name="panel_no_activities">No activities</string>
     <string name="panel_nothing_recent">No workouts in the last 7 days</string>
     <string name="panel_distance_km">%1$s km</string>
     <string name="panel_duration_minutes">%1$d min</string>

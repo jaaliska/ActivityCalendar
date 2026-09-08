@@ -62,7 +62,7 @@ fun DayPanel(
         PanelHeading(selectedDay = selectedDay, activities = activities, recent = recent)
 
         AnimatedContent(
-            targetState = selectedDay,
+            targetState = selectedDay != null,
             transitionSpec = {
                 (fadeIn(tween(TRANSITION_MILLIS)) + slideInVertically { it / SLIDE_FRACTION })
                     .togetherWith(
@@ -71,9 +71,9 @@ fun DayPanel(
                     )
             },
             label = "panel",
-        ) { day ->
+        ) { dayPicked ->
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                if (day == null) recent?.let { RecentBody(it) } else DayBody(activities)
+                if (dayPicked) DayBody(activities) else recent?.let { RecentBody(it) }
             }
         }
     }
@@ -98,15 +98,14 @@ private fun PanelHeading(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
-        val caption = when {
-            selectedDay == null -> recent?.let { periodText(it.from, it.to) }
-            activities.isNotEmpty() -> pluralStringResource(
+        val caption = if (selectedDay == null) {
+            recent?.let { periodText(it.from, it.to) }
+        } else {
+            pluralStringResource(
                 R.plurals.panel_day_activities,
                 activities.size,
                 activities.size,
             )
-
-            else -> null
         }
         caption?.let {
             Text(
@@ -181,7 +180,7 @@ private fun TotalsRow(totals: TypeTotals) {
         )
         Spacer(Modifier.width(COLUMN_GAP))
         NumberCell(
-            text = totals.distanceMeters?.let { distanceText(it) },
+            text = totals.distance()?.let { distanceText(it) },
             modifier = Modifier.width(DISTANCE_COLUMN),
         )
         Spacer(Modifier.width(COLUMN_GAP))
@@ -209,10 +208,6 @@ private fun RowIcon(type: ActivityType) {
 
 @Composable
 private fun DayBody(activities: List<Activity>) {
-    if (activities.isEmpty()) {
-        EmptyBody(stringResource(R.string.panel_no_activities))
-        return
-    }
     activities.forEach { ActivityRow(it) }
 }
 
@@ -246,8 +241,12 @@ private fun ActivityRow(activity: Activity) {
 private fun Activity.meta(): String = listOfNotNull(
     startTimeLocal.format(UI_TIME),
     durationText(duration),
-    distanceMeters?.let { distanceText(it) },
+    distance()?.let { distanceText(it) },
 ).joinToString(META_SEPARATOR)
+
+private fun Activity.distance(): Double? = distanceMeters?.takeIf { type.showsDistance }
+
+private fun TypeTotals.distance(): Double? = distanceMeters?.takeIf { type.showsDistance }
 
 @Composable
 private fun EmptyBody(text: String) {
