@@ -4,14 +4,12 @@ import java.time.LocalDateTime
 
 /** Sources ordered by how much their title is trusted, the most trusted one first. */
 private val TITLE_SOURCES = listOf(
-    ActivitySourceType.MANUAL,
     ActivitySourceType.GARMIN_CSV,
     ActivitySourceType.HEALTH_CONNECT,
 )
 
 /** Sources ordered by how much their duration and distance are trusted, the most trusted one first. */
 private val MEASUREMENT_SOURCES = listOf(
-    ActivitySourceType.MANUAL,
     ActivitySourceType.HEALTH_CONNECT,
     ActivitySourceType.GARMIN_CSV,
 )

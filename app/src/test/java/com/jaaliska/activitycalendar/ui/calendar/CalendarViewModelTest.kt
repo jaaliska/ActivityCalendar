@@ -398,7 +398,7 @@ class CalendarViewModelTest {
             distanceMeters = null,
             title = null,
             sourceId = null,
-            source = ActivitySourceType.MANUAL,
+            source = ActivitySourceType.GARMIN_CSV,
         )
     }
 }

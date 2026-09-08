@@ -41,6 +41,7 @@ class AppContainer(context: Context) {
 
     private val database: AppDatabase = Room
         .databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME)
+        .addMigrations(AppDatabase.MIGRATION_1_2)
         .build()
 
     val activityRepository: ActivityRepository = RoomActivityRepository(database)

@@ -94,7 +94,7 @@ class RoomActivityRepositoryTest {
         repository.deleteAllFrom(ActivitySourceType.DEMO)
 
         assertEquals(0, repository.observeCountFrom(ActivitySourceType.DEMO).first())
-        assertEquals(own.size, repository.observeCountFrom(ActivitySourceType.MANUAL).first())
+        assertEquals(own.size, repository.observeCountFrom(ActivitySourceType.GARMIN_CSV).first())
     }
 
     @Test

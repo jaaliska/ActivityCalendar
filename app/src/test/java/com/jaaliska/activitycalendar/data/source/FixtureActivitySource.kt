@@ -15,7 +15,7 @@ import java.time.LocalDateTime
  */
 class FixtureActivitySource : ActivitySource {
 
-    override val sourceType: ActivitySourceType = ActivitySourceType.MANUAL
+    override val sourceType: ActivitySourceType = ActivitySourceType.GARMIN_CSV
 
     override suspend fun getActivities(from: LocalDateTime, to: LocalDateTime): List<Activity> =
         ALL.filter { it.startTimeLocal >= from && it.startTimeLocal < to }
@@ -53,7 +53,7 @@ class FixtureActivitySource : ActivitySource {
             distanceMeters = distanceMeters,
             title = null,
             sourceId = null,
-            source = ActivitySourceType.MANUAL,
+            source = ActivitySourceType.GARMIN_CSV,
         )
     }
 }

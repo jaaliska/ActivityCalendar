@@ -55,19 +55,20 @@ class ActivityMergeTest {
     }
 
     @Test
-    fun `manual values outrank both imports`() {
-        val manual = activity(
-            source = ActivitySourceType.MANUAL,
+    fun `an unranked source loses to both imports`() {
+        val demo = activity(
+            source = ActivitySourceType.DEMO,
             duration = Duration.ofMinutes(40),
             distanceMeters = 7000.0,
-            title = "Morning run",
+            title = "Sample run",
         )
 
-        val merged = manual.mergeWith(fromHealthConnect).mergeWith(fromCsv)
+        val measured = fromHealthConnect.mergeWith(demo)
+        val titled = fromCsv.mergeWith(demo)
 
-        assertEquals("Morning run", merged.title)
-        assertEquals(7000.0, merged.distanceMeters!!, 0.001)
-        assertEquals(Duration.ofMinutes(40), merged.duration)
+        assertEquals(fromHealthConnect.distanceMeters!!, measured.distanceMeters!!, 0.001)
+        assertEquals(fromHealthConnect.duration, measured.duration)
+        assertEquals(fromCsv.title, titled.title)
     }
 
     @Test
