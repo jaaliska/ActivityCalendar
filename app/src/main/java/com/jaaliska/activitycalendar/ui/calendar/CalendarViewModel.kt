@@ -2,12 +2,16 @@ package com.jaaliska.activitycalendar.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jaaliska.activitycalendar.domain.Activity
+import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.domain.usecase.CalendarWindow
 import com.jaaliska.activitycalendar.domain.usecase.DayActivities
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
 import com.jaaliska.activitycalendar.domain.usecase.MonthActivities
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
+import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
+import com.jaaliska.activitycalendar.domain.usecase.PeriodSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -17,8 +21,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.scan
@@ -34,6 +40,8 @@ import java.time.YearMonth
  */
 class CalendarViewModel(
     private val observeCalendarMonths: ObserveCalendarMonths,
+    private val observeRecentSummary: ObserveRecentSummary,
+    private val repository: ActivityRepository,
     private val getHealthConnectStatus: GetHealthConnectStatus,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
@@ -45,8 +53,14 @@ class CalendarViewModel(
 
     private val requests = MutableStateFlow(Request(anchor, attempt = 0))
 
-    val state: StateFlow<CalendarUiState> = reads()
-        .scan(CalendarUiState.Calendar(today) as CalendarUiState, ::merge)
+    private val selectedDay = MutableStateFlow<LocalDate?>(null)
+
+    val state: StateFlow<CalendarUiState> = combine(
+        reads().scan(CalendarUiState.Calendar(today) as CalendarUiState, ::merge),
+        selections(),
+        recentSummaries(),
+        ::withPanel,
+    )
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -74,6 +88,16 @@ class CalendarViewModel(
         requests.value = requests.value.copy(month = month)
     }
 
+    /** Picks the day the panel describes; picking the day already picked shows the period again. */
+    fun selectDay(date: LocalDate) {
+        selectedDay.value = date.takeIf { it != selectedDay.value }
+    }
+
+    /** Drops the picked day, so the panel goes back to the last seven days. */
+    fun clearDaySelection() {
+        selectedDay.value = null
+    }
+
     /** Reads the months again after a failure, without restarting the app. */
     fun retry() {
         requests.value = requests.value.copy(attempt = requests.value.attempt + 1)
@@ -88,6 +112,45 @@ class CalendarViewModel(
         previous is CalendarUiState.Calendar -> previous.copy(reading = read.slow)
         else -> previous
     }
+
+    private fun withPanel(
+        state: CalendarUiState,
+        selection: Selection,
+        recent: PeriodSummary?,
+    ): CalendarUiState =
+        if (state is CalendarUiState.Calendar) {
+            state.copy(
+                selectedDay = selection.day,
+                selectedDayActivities = selection.activities,
+                recent = recent,
+            )
+        } else {
+            state
+        }
+
+    // The picked day is read on its own, not taken from the months on screen: it stays picked
+    // however far the calendar is paged away from it.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun selections(): Flow<Selection> = selectedDay.flatMapLatest { day ->
+        if (day == null) {
+            flowOf(Selection())
+        } else {
+            repository.observeRange(day, day.plusDays(1))
+                .map { activities -> Selection(day, activities) }
+                .catch { emit(Selection(day)) }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun recentSummaries(): Flow<PeriodSummary?> = requests
+        .map { it.attempt }
+        .distinctUntilChanged()
+        .flatMapLatest {
+            observeRecentSummary(today)
+                .map<PeriodSummary, PeriodSummary?> { summary -> summary }
+                .onStart { emit(null) }
+                .catch { emit(null) }
+        }
 
     // A StateFlow already drops repeats, so paging back to a month that is already read
     // does not start the read again.
@@ -122,7 +185,7 @@ class CalendarViewModel(
         date = date,
         inMonth = inMonth,
         isToday = date == today,
-        types = types,
+        activities = activities,
     )
 
     // A local read takes milliseconds. The progress line exists for the read that does not.
@@ -134,6 +197,12 @@ class CalendarViewModel(
 
     /** What the state is being read for: a month to show, and which attempt at it this is. */
     private data class Request(val month: YearMonth, val attempt: Int)
+
+    /** The picked day together with what it holds, so the panel never shows one without the other. */
+    private data class Selection(
+        val day: LocalDate? = null,
+        val activities: List<Activity> = emptyList(),
+    )
 
     /** One step of a read: the answer if it has arrived, and whether it is taking long. */
     private data class Read(val answer: CalendarUiState?, val slow: Boolean)

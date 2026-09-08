@@ -31,6 +31,50 @@
     <string name="calendar_sync_banner">Sync stopped \u2014 Health Connect is not connected</string>
     <string name="calendar_sync_banner_action">Fix</string>
 
+    <string name="panel_recent_title">Last 7 days</string>
+    <string name="panel_recent_period">%1$s \u2013 %2$s</string>
+    <string name="panel_column_activity">Activity</string>
+    <string name="panel_column_distance">Distance</string>
+    <string name="panel_column_time">Time</string>
+    <string name="panel_nothing_recent">No workouts in the last 7 days</string>
+    <string name="panel_distance_km">%1$s km</string>
+    <string name="panel_duration_minutes">%1$d min</string>
+    <string name="panel_duration_hours">%1$d h %2$02d min</string>
+
+    <plurals name="panel_day_activities">
+        <item quantity="one">%1$d activity</item>
+        <item quantity="other">%1$d activities</item>
+    </plurals>
+
+    <plurals name="panel_count_badminton">
+        <item quantity="one">%1$d Badminton</item>
+        <item quantity="other">%1$d Badminton</item>
+    </plurals>
+    <plurals name="panel_count_cycling">
+        <item quantity="one">%1$d Ride</item>
+        <item quantity="other">%1$d Rides</item>
+    </plurals>
+    <plurals name="panel_count_running">
+        <item quantity="one">%1$d Run</item>
+        <item quantity="other">%1$d Runs</item>
+    </plurals>
+    <plurals name="panel_count_strength_training">
+        <item quantity="one">%1$d Strength</item>
+        <item quantity="other">%1$d Strength</item>
+    </plurals>
+    <plurals name="panel_count_walking">
+        <item quantity="one">%1$d Walk</item>
+        <item quantity="other">%1$d Walks</item>
+    </plurals>
+    <plurals name="panel_count_yoga">
+        <item quantity="one">%1$d Yoga</item>
+        <item quantity="other">%1$d Yoga</item>
+    </plurals>
+    <plurals name="panel_count_other">
+        <item quantity="one">%1$d Other</item>
+        <item quantity="other">%1$d Other</item>
+    </plurals>
+
     <string name="first_run_title">No workouts yet</string>
     <string name="first_run_import_title">Import history from Garmin CSV</string>
     <string name="first_run_import_subtitle">All your past workouts at once</string>

@@ -18,6 +18,7 @@ import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
 import com.jaaliska.activitycalendar.domain.usecase.ImportActivities
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
+import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
 import com.jaaliska.activitycalendar.domain.usecase.SyncHealthConnect
 import com.jaaliska.activitycalendar.domain.usecase.SyncResult
 import com.jaaliska.activitycalendar.ui.file.FileSource
@@ -36,6 +37,8 @@ class AppContainer(context: Context) {
     val activityRepository: ActivityRepository = RoomActivityRepository(database)
 
     val observeCalendarMonths = ObserveCalendarMonths(activityRepository)
+
+    val observeRecentSummary = ObserveRecentSummary(activityRepository)
 
     val importHistory: ImportHistory = DataStoreImportHistory(context.settingsDataStore)
 
