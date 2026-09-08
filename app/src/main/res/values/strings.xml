@@ -3,6 +3,7 @@
 
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
     <string name="action_settings">Settings</string>
 
     <string name="settings_title">Settings</string>
@@ -93,7 +94,11 @@
     <string name="settings_health_connect_unavailable">Not available on this phone</string>
     <string name="settings_demo_title">Demo data</string>
     <string name="settings_demo_subtitle">See the app without your own workouts</string>
+    <string name="settings_demo_confirm_title">Load demo data?</string>
+    <string name="settings_demo_confirm_text">Sample workouts will be added to your calendar. They are marked as demo data, so you can remove them here at any time without touching your own history.</string>
     <string name="settings_demo_loaded_title">Demo data loaded</string>
+    <string name="settings_demo_remove_title">Remove demo data?</string>
+    <string name="settings_demo_remove_text">The sample workouts leave the calendar. Your own history, imported or synced, stays as it is.</string>
     <plurals name="settings_demo_loaded_subtitle">
         <item quantity="one">%d sample workout</item>
         <item quantity="other">%d sample workouts</item>

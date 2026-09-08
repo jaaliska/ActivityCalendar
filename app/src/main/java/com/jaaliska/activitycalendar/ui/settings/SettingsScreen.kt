@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +29,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +70,33 @@ fun SettingsScreen(
     OnResume(onScreenResumed)
 
     val snackbarHostState = remember { SnackbarHostState() }
+    var confirmingDemo by rememberSaveable { mutableStateOf(false) }
+    var confirmingDemoRemoval by rememberSaveable { mutableStateOf(false) }
+
+    if (confirmingDemo) {
+        DemoDialog(
+            title = stringResource(R.string.settings_demo_confirm_title),
+            text = stringResource(R.string.settings_demo_confirm_text),
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = {
+                confirmingDemo = false
+                onDemoLoadClick()
+            },
+            onDismiss = { confirmingDemo = false },
+        )
+    }
+    if (confirmingDemoRemoval) {
+        DemoDialog(
+            title = stringResource(R.string.settings_demo_remove_title),
+            text = stringResource(R.string.settings_demo_remove_text),
+            confirmText = stringResource(R.string.settings_demo_remove),
+            onConfirm = {
+                confirmingDemoRemoval = false
+                onDemoRemoveClick()
+            },
+            onDismiss = { confirmingDemoRemoval = false },
+        )
+    }
     val exportName = stringResource(R.string.settings_export_file_name, LocalDate.now().format(UI_FILE_DATE))
     val exportPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(CSV_MIME_TYPE),
@@ -100,7 +132,7 @@ fun SettingsScreen(
                 SettingsRow(
                     title = stringResource(R.string.settings_demo_title),
                     subtitle = stringResource(R.string.settings_demo_subtitle),
-                    onClick = onDemoLoadClick,
+                    onClick = { confirmingDemo = true },
                     trailing = {},
                 )
             } else {
@@ -112,7 +144,7 @@ fun SettingsScreen(
                         state.demoActivities,
                     ),
                     trailing = {
-                        TextButton(onClick = onDemoRemoveClick) {
+                        TextButton(onClick = { confirmingDemoRemoval = true }) {
                             Text(stringResource(R.string.settings_demo_remove))
                         }
                     },
@@ -138,6 +170,27 @@ fun SettingsScreen(
             )
         }
     }
+}
+
+@Composable
+private fun DemoDialog(
+    title: String,
+    text: String,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(text) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(confirmText) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
 }
 
 @Composable
