@@ -112,6 +112,7 @@
         <item quantity="other">Exported %d activities</item>
     </plurals>
     <string name="settings_export_failed">Export failed, the file was not written</string>
+    <string name="demo_failed">Demo data could not be loaded</string>
     <string name="settings_color_scheme_title">Color scheme</string>
     <string name="settings_color_scheme_crimson">Crimson</string>
     <string name="settings_color_scheme_blue">Blue</string>

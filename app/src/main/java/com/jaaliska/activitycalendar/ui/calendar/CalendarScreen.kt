@@ -24,6 +24,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -60,6 +62,7 @@ fun CalendarScreen(
     state: CalendarUiState,
     anchor: YearMonth,
     syncStopped: Boolean,
+    demoFailed: Boolean,
     onMonthSettled: (YearMonth) -> Unit,
     onDaySelected: (LocalDate) -> Unit,
     onTodayClick: () -> Unit,
@@ -67,11 +70,21 @@ fun CalendarScreen(
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
     onDemoClick: () -> Unit,
+    onDemoFailureShown: () -> Unit,
     onRetry: () -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OnResume(onScreenResumed)
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val demoFailure = stringResource(R.string.demo_failed)
+    LaunchedEffect(demoFailed) {
+        if (demoFailed) {
+            snackbarHostState.showSnackbar(demoFailure)
+            onDemoFailureShown()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -88,6 +101,7 @@ fun CalendarScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         // Six rows of grid and a panel do not fit a landscape screen, so a short screen scrolls.
         BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(innerPadding)) {

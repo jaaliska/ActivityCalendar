@@ -1,6 +1,5 @@
 package com.jaaliska.activitycalendar.ui.calendar
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jaaliska.activitycalendar.domain.Activity
@@ -70,6 +69,11 @@ class CalendarViewModel(
             initialValue = CalendarUiState.Calendar(today),
         )
 
+    private val _demoFailed = MutableStateFlow(false)
+
+    /** The sample activities could not be stored; the screen says so and forgets it. */
+    val demoFailed: StateFlow<Boolean> = _demoFailed.asStateFlow()
+
     private val _syncStopped = MutableStateFlow(false)
 
     /** Health Connect used to fill the calendar and no longer does; the screen says so on top. */
@@ -103,8 +107,13 @@ class CalendarViewModel(
 
     fun loadDemo() {
         viewModelScope.launch {
-            runCatching { loadDemoData() }.onFailure { Log.w(TAG, "loading demo data failed", it) }
+            runCatching { loadDemoData() }.onFailure { _demoFailed.value = true }
         }
+    }
+
+    /** The screen has told the user that the sample activities did not load. */
+    fun demoFailureShown() {
+        _demoFailed.value = false
     }
 
     /** Reads the months again after a failure, without restarting the app. */
@@ -219,6 +228,5 @@ class CalendarViewModel(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val SLOW_READ_MILLIS = 200L
-        const val TAG = "CalendarViewModel"
     }
 }

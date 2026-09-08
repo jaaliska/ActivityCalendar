@@ -96,8 +96,8 @@ class SettingsViewModelTest {
 
         viewModel.export(Uri.parse("content://export/history.csv"))
 
-        val export = viewModel.state.first { it.export != null }.export
-        assertEquals(ExportResult.Done(loaded.demoActivities), export)
+        val message = viewModel.state.first { it.message != null }.message
+        assertEquals(SettingsMessage.Exported(loaded.demoActivities), message)
         assertEquals(
             loaded.demoActivities,
             exportTarget.written().lineSequence().filter { it.isNotBlank() }.count() - 1,
@@ -111,8 +111,30 @@ class SettingsViewModelTest {
 
         viewModel.export(Uri.parse("content://export/history.csv"))
 
-        assertEquals(ExportResult.Failed, viewModel.state.first { it.export != null }.export)
+        assertEquals(
+            SettingsMessage.ExportFailed,
+            viewModel.state.first { it.message != null }.message,
+        )
     }
+
+    @Test
+    fun `demo data that cannot be loaded says so instead of failing quietly`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel(
+                LoadDemoData(
+                    repository = repository,
+                    parser = GarminCsvParser(),
+                    file = { throw IOException("no such asset") },
+                ),
+            )
+
+            viewModel.loadDemo()
+
+            assertEquals(
+                SettingsMessage.DemoFailed,
+                viewModel.state.first { it.message != null }.message,
+            )
+        }
 
     @Test
     fun `the demo row counts the samples and empties when they are removed`() = runTest(dispatcher) {
@@ -145,7 +167,7 @@ class SettingsViewModelTest {
         override fun displayName(uri: Uri): String = "history.csv"
     }
 
-    private fun viewModel() = SettingsViewModel(
+    private fun viewModel(demoData: LoadDemoData = loadDemoData) = SettingsViewModel(
         importHistory = FakeImportHistory(),
         repository = repository,
         appearanceSettings = appearance,
@@ -153,7 +175,7 @@ class SettingsViewModelTest {
             FakeHealthConnectSource(),
             FakeHealthConnectSyncState(),
         ),
-        loadDemoData = loadDemoData,
+        loadDemoData = demoData,
         exportActivities = ExportActivities(repository, GarminCsvWriter()),
         fileSource = exportTarget,
         ioDispatcher = dispatcher,

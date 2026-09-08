@@ -1,7 +1,6 @@
 package com.jaaliska.activitycalendar.ui.settings
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jaaliska.activitycalendar.domain.ActivityRepository
@@ -40,16 +39,16 @@ class SettingsViewModel(
 
     private var demoRunning = false
 
-    private val export = MutableStateFlow<ExportResult?>(null)
+    private val message = MutableStateFlow<SettingsMessage?>(null)
 
     val state: StateFlow<SettingsUiState> = combine(
         importHistory.lastImport,
         healthConnect,
         appearanceSettings.colorScheme,
         repository.observeCountFrom(ActivitySourceType.DEMO).catch { emit(0) },
-        export,
-    ) { lastImport, connection, scheme, demo, export ->
-        SettingsUiState(lastImport, connection, scheme, demo, export)
+        message,
+    ) { lastImport, connection, scheme, demo, message ->
+        SettingsUiState(lastImport, connection, scheme, demo, message)
     }
         .stateIn(
             scope = viewModelScope,
@@ -73,23 +72,20 @@ class SettingsViewModel(
     /** Writes the whole history into the file the picker created. */
     fun export(uri: Uri) {
         viewModelScope.launch {
-            export.value = runCatching {
+            message.value = runCatching {
                 withContext(ioDispatcher) {
                     fileSource.openForWriting(uri).use { exportActivities(it) }
                 }
             }.fold(
-                onSuccess = { ExportResult.Done(it) },
-                onFailure = { failure ->
-                    Log.w(TAG, "export failed", failure)
-                    ExportResult.Failed
-                },
+                onSuccess = { SettingsMessage.Exported(it) },
+                onFailure = { SettingsMessage.ExportFailed },
             )
         }
     }
 
-    /** Clears the result once the screen has shown it. */
-    fun exportShown() {
-        export.value = null
+    /** Clears the message once the screen has shown it. */
+    fun messageShown() {
+        message.value = null
     }
 
     fun loadDemo() = runDemo { loadDemoData() }
@@ -100,13 +96,12 @@ class SettingsViewModel(
         if (demoRunning) return
         demoRunning = true
         viewModelScope.launch {
-            runCatching { action() }.onFailure { Log.w(TAG, "demo data action failed", it) }
+            runCatching { action() }.onFailure { message.value = SettingsMessage.DemoFailed }
             demoRunning = false
         }
     }
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
-        const val TAG = "SettingsViewModel"
     }
 }

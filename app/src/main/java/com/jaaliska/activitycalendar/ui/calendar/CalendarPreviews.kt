@@ -77,6 +77,7 @@ private fun LandscapePreview() {
             ),
             anchor = YearMonth.of(2026, 9),
             syncStopped = false,
+            demoFailed = false,
             onMonthSettled = {},
             onDaySelected = {},
             onTodayClick = {},
@@ -84,6 +85,7 @@ private fun LandscapePreview() {
             onImportClick = {},
             onHealthConnectClick = {},
             onDemoClick = {},
+            onDemoFailureShown = {},
             onRetry = {},
             onScreenResumed = {},
         )

@@ -46,11 +46,13 @@ fun AppNavHost(
             )
             val calendarState by calendarViewModel.state.collectAsState()
             val syncStopped by calendarViewModel.syncStopped.collectAsState()
+            val demoFailed by calendarViewModel.demoFailed.collectAsState()
 
             CalendarScreen(
                 state = calendarState,
                 anchor = calendarViewModel.anchor,
                 syncStopped = syncStopped,
+                demoFailed = demoFailed,
                 onMonthSettled = calendarViewModel::showMonth,
                 onDaySelected = calendarViewModel::selectDay,
                 onTodayClick = calendarViewModel::clearDaySelection,
@@ -58,6 +60,7 @@ fun AppNavHost(
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
                 onDemoClick = calendarViewModel::loadDemo,
+                onDemoFailureShown = calendarViewModel::demoFailureShown,
                 onRetry = calendarViewModel::retry,
                 onScreenResumed = calendarViewModel::refreshSyncStatus,
             )
@@ -87,7 +90,7 @@ fun AppNavHost(
                 onDemoLoadClick = settingsViewModel::loadDemo,
                 onDemoRemoveClick = settingsViewModel::removeDemo,
                 onExport = settingsViewModel::export,
-                onExportShown = settingsViewModel::exportShown,
+                onMessageShown = settingsViewModel::messageShown,
                 onScreenResumed = settingsViewModel::refresh,
             )
         }

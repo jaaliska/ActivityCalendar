@@ -65,7 +65,7 @@ fun SettingsScreen(
     onDemoLoadClick: () -> Unit,
     onDemoRemoveClick: () -> Unit,
     onExport: (Uri) -> Unit,
-    onExportShown: () -> Unit,
+    onMessageShown: () -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -104,7 +104,7 @@ fun SettingsScreen(
         ActivityResultContracts.CreateDocument(CSV_MIME_TYPE),
     ) { uri -> if (uri != null) onExport(uri) }
 
-    ExportSnackbar(state.export, snackbarHostState, onExportShown)
+    MessageSnackbar(state.message, snackbarHostState, onMessageShown)
 
     Scaffold(
         modifier = modifier,
@@ -197,21 +197,25 @@ private fun DemoDialog(
 }
 
 @Composable
-private fun ExportSnackbar(
-    export: ExportResult?,
+private fun MessageSnackbar(
+    message: SettingsMessage?,
     snackbarHostState: SnackbarHostState,
     onShown: () -> Unit,
 ) {
-    val message = when (export) {
-        is ExportResult.Done ->
-            pluralStringResource(R.plurals.settings_export_done, export.activities, export.activities)
+    val text = when (message) {
+        is SettingsMessage.Exported -> pluralStringResource(
+            R.plurals.settings_export_done,
+            message.activities,
+            message.activities,
+        )
 
-        ExportResult.Failed -> stringResource(R.string.settings_export_failed)
+        SettingsMessage.ExportFailed -> stringResource(R.string.settings_export_failed)
+        SettingsMessage.DemoFailed -> stringResource(R.string.demo_failed)
         null -> null
     }
-    LaunchedEffect(export) {
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
+    LaunchedEffect(message) {
+        if (text != null) {
+            snackbarHostState.showSnackbar(text)
             onShown()
         }
     }

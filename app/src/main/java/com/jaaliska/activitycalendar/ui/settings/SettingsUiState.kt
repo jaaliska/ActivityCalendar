@@ -4,13 +4,15 @@ import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import java.time.LocalDate
 
-/** How the last export of the history ended, null until one has run. */
-sealed interface ExportResult {
+/** What the screen has to tell the user, null while it has nothing to say. */
+sealed interface SettingsMessage {
 
-    /** @property activities how many activities went into the file */
-    data class Done(val activities: Int) : ExportResult
+    /** @property activities how many activities went into the exported file */
+    data class Exported(val activities: Int) : SettingsMessage
 
-    data object Failed : ExportResult
+    data object ExportFailed : SettingsMessage
+
+    data object DemoFailed : SettingsMessage
 }
 
 /** What the settings screen shows.
@@ -23,5 +25,5 @@ data class SettingsUiState(
     val healthConnect: ConnectionStatus = ConnectionStatus.NeverConnected,
     val colorScheme: ColorSchemeChoice = ColorSchemeChoice.BLUE,
     val demoActivities: Int = 0,
-    val export: ExportResult? = null,
+    val message: SettingsMessage? = null,
 )

@@ -24,9 +24,11 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 import java.io.InputStream
 import java.time.Clock
 import java.time.Duration
@@ -317,16 +319,39 @@ class CalendarViewModelTest {
     private fun calendarOf(viewModel: CalendarViewModel) =
         viewModel.state.value as CalendarUiState.Calendar
 
-    private fun viewModelOn(repository: ActivityRepository) = CalendarViewModel(
-        observeCalendarMonths = ObserveCalendarMonths(repository),
-        observeRecentSummary = ObserveRecentSummary(repository),
-        repository = repository,
-        getHealthConnectStatus = neverConnected,
-        loadDemoData = LoadDemoData(
+    @Test
+    fun `demo data that cannot be loaded is reported to the screen`() = runTest(dispatcher) {
+        val viewModel = viewModelOn(
+            FakeRepository(),
+            demoData = LoadDemoData(
+                repository = FakeRepository(),
+                parser = { ParsedActivities(emptyList(), emptyList()) },
+                file = { throw IOException("no such asset") },
+            ),
+        )
+
+        viewModel.loadDemo()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.demoFailed.value)
+
+        viewModel.demoFailureShown()
+        assertFalse(viewModel.demoFailed.value)
+    }
+
+    private fun viewModelOn(
+        repository: ActivityRepository,
+        demoData: LoadDemoData = LoadDemoData(
             repository = repository,
             parser = { ParsedActivities(emptyList(), emptyList()) },
             file = { InputStream.nullInputStream() },
         ),
+    ) = CalendarViewModel(
+        observeCalendarMonths = ObserveCalendarMonths(repository),
+        observeRecentSummary = ObserveRecentSummary(repository),
+        repository = repository,
+        getHealthConnectStatus = neverConnected,
+        loadDemoData = demoData,
         clock = clock,
     )
 
