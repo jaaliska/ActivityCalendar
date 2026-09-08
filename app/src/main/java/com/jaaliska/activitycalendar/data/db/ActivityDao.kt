@@ -54,6 +54,22 @@ interface ActivityDao {
     @Update
     suspend fun updateAll(activities: List<ActivityEntity>)
 
+    /** Returns the activities of [source] started in `[fromInclusive, toExclusive)`. */
+    @Query(
+        "SELECT * FROM activities " +
+            "WHERE source = :source AND startTimeLocal >= :fromInclusive " +
+            "AND startTimeLocal < :toExclusive"
+    )
+    suspend fun getInRangeFromSource(
+        fromInclusive: String,
+        toExclusive: String,
+        source: String,
+    ): List<ActivityEntity>
+
+    /** @return how many rows were removed */
+    @Query("DELETE FROM activities WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>): Int
+
     @Query("DELETE FROM activities WHERE source = :source")
     suspend fun deleteBySource(source: String)
 

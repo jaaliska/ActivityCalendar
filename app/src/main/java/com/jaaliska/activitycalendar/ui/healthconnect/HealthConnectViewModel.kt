@@ -6,6 +6,7 @@ import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectAvailabil
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.SyncHealthConnect
+import com.jaaliska.activitycalendar.domain.usecase.SyncScope
 import com.jaaliska.activitycalendar.domain.usecase.SyncResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,18 +48,24 @@ class HealthConnectViewModel(
     /** Reads Health Connect now. */
     fun sync() = startSync(afterPermissionDialog = false)
 
+    /** Reads the whole history again, dropping the workouts Health Connect no longer has. */
+    fun rebuild() = startSync(afterPermissionDialog = false, scope = SyncScope.WHOLE_HISTORY)
+
     /**
      * The way back from the system permission dialog: reads Health Connect if everything was
      * granted, and remembers that the dialog has been shown either way.
      */
     fun onPermissionsRequested() = startSync(afterPermissionDialog = true)
 
-    private fun startSync(afterPermissionDialog: Boolean) {
+    private fun startSync(
+        afterPermissionDialog: Boolean,
+        scope: SyncScope = SyncScope.CHANGES,
+    ) {
         if (_state.value == HealthConnectUiState.Syncing) return
         _state.value = HealthConnectUiState.Syncing
         viewModelScope.launch {
             if (afterPermissionDialog) syncState.recordPermissionsAsked()
-            _state.value = when (syncHealthConnect()) {
+            _state.value = when (syncHealthConnect(scope)) {
                 is SyncResult.Synced -> connectedState()
                 SyncResult.NotConnected -> currentState()
                 is SyncResult.Failed -> HealthConnectUiState.SyncFailed(

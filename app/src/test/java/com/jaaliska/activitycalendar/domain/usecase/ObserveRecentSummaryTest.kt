@@ -125,6 +125,13 @@ class ObserveRecentSummaryTest {
 
         override suspend fun save(activities: List<Activity>): Int = 0
 
+        override suspend fun deleteMissing(
+            source: ActivitySourceType,
+            from: LocalDateTime,
+            toExclusive: LocalDateTime,
+            kept: List<Activity>,
+        ): Int = 0
+
         override suspend fun deleteAllFrom(source: ActivitySourceType) = Unit
     }
 

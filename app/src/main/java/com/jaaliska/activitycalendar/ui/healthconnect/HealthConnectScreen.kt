@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,7 +27,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +60,7 @@ fun HealthConnectScreen(
     permissions: Set<String>,
     onPermissionsResult: () -> Unit,
     onSyncNow: () -> Unit,
+    onRebuild: () -> Unit,
     onScreenResumed: () -> Unit,
     onImportClick: () -> Unit,
     onBack: () -> Unit,
@@ -63,6 +70,17 @@ fun HealthConnectScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract(),
     ) { onPermissionsResult() }
+    var confirmingRebuild by rememberSaveable { mutableStateOf(false) }
+
+    if (confirmingRebuild) {
+        RebuildDialog(
+            onConfirm = {
+                confirmingRebuild = false
+                onRebuild()
+            },
+            onDismiss = { confirmingRebuild = false },
+        )
+    }
 
     OnResume(onScreenResumed)
 
@@ -98,6 +116,7 @@ fun HealthConnectScreen(
                     lastSync = state.lastSync,
                     backgroundSync = state.backgroundSync,
                     onSyncNow = onSyncNow,
+                    onRebuild = { confirmingRebuild = true },
                     onFixBackground = { context.openHealthConnectPermissions() },
                 )
 
@@ -245,6 +264,7 @@ private fun Connected(
     lastSync: Instant?,
     backgroundSync: Boolean,
     onSyncNow: () -> Unit,
+    onRebuild: () -> Unit,
     onFixBackground: () -> Unit,
 ) {
     Card {
@@ -314,6 +334,31 @@ private fun Connected(
         text = stringResource(R.string.health_connect_sync_now),
         icon = R.drawable.ic_sync,
         onClick = onSyncNow,
+    )
+    TextButton(
+        onClick = onRebuild,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.health_connect_rebuild))
+    }
+}
+
+@Composable
+private fun RebuildDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.health_connect_rebuild_title)) },
+        text = { Text(stringResource(R.string.health_connect_rebuild_text)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.health_connect_rebuild_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
     )
 }
 

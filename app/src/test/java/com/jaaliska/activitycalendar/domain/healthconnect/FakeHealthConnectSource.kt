@@ -27,13 +27,20 @@ class FakeHealthConnectSource(
     /** What every read throws, if the test wants Health Connect to fail. */
     var failure: Throwable? = null
 
-    var fullReads: Int = 0
-        private set
+    /** Every range the source was asked for, oldest call first. */
+    val reads = mutableListOf<Pair<LocalDateTime, LocalDateTime>>()
+
+    /** Reads of the whole history, as opposed to reads of a window of it. */
+    val fullReads: Int get() = reads.count { (from, _) -> from.year == HISTORY_START_YEAR }
 
     var changeReads: Int = 0
         private set
 
     private var tokensTaken = 0
+
+    private companion object {
+        const val HISTORY_START_YEAR = 1970
+    }
 
     override fun availability(): HealthConnectAvailability = availability
 
@@ -45,7 +52,7 @@ class FakeHealthConnectSource(
 
     override suspend fun getActivities(from: LocalDateTime, to: LocalDateTime): List<Activity> {
         failure?.let { throw it }
-        fullReads++
+        reads += from to to
         return sessions.filter { it.startTimeLocal >= from && it.startTimeLocal < to }
     }
 

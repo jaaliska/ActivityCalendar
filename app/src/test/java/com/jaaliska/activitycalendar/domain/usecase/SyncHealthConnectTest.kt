@@ -7,6 +7,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
 import com.jaaliska.activitycalendar.data.settings.DataStoreHealthConnectSyncState
+import com.jaaliska.activitycalendar.domain.Activity
+import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import com.jaaliska.activitycalendar.domain.ActivityType
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
@@ -29,8 +31,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -88,7 +92,9 @@ class SyncHealthConnectTest {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
         syncHealthConnect()
 
-        source.changed = listOf(healthConnectActivity("2026-08-13T07:15:00", ActivityType.WALKING))
+        val walk = healthConnectActivity("2026-08-13T07:15:00", ActivityType.WALKING)
+        source.changed = listOf(walk)
+        source.sessions = source.sessions + walk
         val result = syncHealthConnect()
 
         assertEquals(SyncResult.Synced(added = 1), result)
@@ -173,7 +179,85 @@ class SyncHealthConnectTest {
             assertTrue(syncState.seenAnySession.first())
         }
 
+    @Test
+    fun `a workout deleted in Health Connect leaves the calendar`() = runTest {
+        source.sessions = listOf(
+            healthConnectActivity("2026-08-20T07:30:00"),
+            healthConnectActivity("2026-08-25T19:00:00", ActivityType.YOGA),
+        )
+        syncHealthConnect()
+
+        source.sessions = listOf(healthConnectActivity("2026-08-20T07:30:00"))
+        val result = syncHealthConnect()
+
+        assertEquals(SyncResult.Synced(added = 0, removed = 1), result)
+        assertEquals(1, storedIn(YearMonth.of(2026, 8)))
+    }
+
+    @Test
+    fun `the mirror leaves the imported history alone`() = runTest {
+        repository.save(listOf(importedActivity("2026-08-21T18:00:00")))
+        source.sessions = listOf(healthConnectActivity("2026-08-20T07:30:00"))
+
+        syncHealthConnect()
+
+        assertEquals(2, storedIn(YearMonth.of(2026, 8)))
+    }
+
+    @Test
+    fun `a Health Connect answering with nothing removes nothing`() = runTest {
+        source.sessions = listOf(healthConnectActivity("2026-08-20T07:30:00"))
+        syncHealthConnect()
+
+        source.sessions = emptyList()
+        val result = syncHealthConnect()
+
+        assertEquals(SyncResult.Synced(added = 0, removed = 0), result)
+        assertEquals(1, storedIn(YearMonth.of(2026, 8)))
+    }
+
+    @Test
+    fun `a sync mirrors the last 30 days and nothing older`() = runTest {
+        source.sessions = listOf(
+            healthConnectActivity("2026-06-01T07:30:00"),
+            healthConnectActivity("2026-08-20T07:30:00"),
+        )
+        syncHealthConnect()
+
+        source.sessions = listOf(healthConnectActivity("2026-08-20T07:30:00"))
+        val result = syncHealthConnect()
+
+        assertEquals(SyncResult.Synced(added = 0, removed = 0), result)
+        assertEquals(1, storedIn(YearMonth.of(2026, 6)))
+    }
+
+    @Test
+    fun `a rebuild mirrors the whole history`() = runTest {
+        source.sessions = listOf(
+            healthConnectActivity("2026-06-01T07:30:00"),
+            healthConnectActivity("2026-08-20T07:30:00"),
+        )
+        syncHealthConnect()
+
+        source.sessions = listOf(healthConnectActivity("2026-08-20T07:30:00"))
+        val result = syncHealthConnect(SyncScope.WHOLE_HISTORY)
+
+        assertEquals(SyncResult.Synced(added = 0, removed = 1), result)
+        assertEquals(0, storedIn(YearMonth.of(2026, 6)))
+        assertEquals(1, storedIn(YearMonth.of(2026, 8)))
+    }
+
     private suspend fun storedIn(month: YearMonth): Int = repository.getMonth(month).size
+
+    private fun importedActivity(startTimeLocal: String) = Activity(
+        startTimeLocal = LocalDateTime.parse(startTimeLocal),
+        type = ActivityType.RUNNING,
+        duration = Duration.ofMinutes(40),
+        distanceMeters = 6500.0,
+        title = "Morning Run",
+        sourceId = null,
+        source = ActivitySourceType.GARMIN_CSV,
+    )
 
     private companion object {
         val NOW: Instant = LocalDate.of(2026, 9, 1).atTime(10, 0)

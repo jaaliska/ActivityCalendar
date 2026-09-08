@@ -125,6 +125,7 @@ fun AppNavHost(
                 permissions = healthConnectViewModel.permissions,
                 onPermissionsResult = healthConnectViewModel::onPermissionsRequested,
                 onSyncNow = healthConnectViewModel::sync,
+                onRebuild = healthConnectViewModel::rebuild,
                 onScreenResumed = healthConnectViewModel::refresh,
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onBack = { navController.popBackStack() },

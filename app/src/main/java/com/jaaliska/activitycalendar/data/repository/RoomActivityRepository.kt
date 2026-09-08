@@ -15,6 +15,7 @@ import com.jaaliska.activitycalendar.domain.mergeWith
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 class RoomActivityRepository(private val database: AppDatabase) : ActivityRepository {
@@ -45,6 +46,19 @@ class RoomActivityRepository(private val database: AppDatabase) : ActivityReposi
         val alreadyStored = incoming.filterIndexed { index, _ -> rowIds[index] == SKIPPED }
         mergeIntoStored(alreadyStored)
         rowIds.count { it != SKIPPED }
+    }
+
+    override suspend fun deleteMissing(
+        source: ActivitySourceType,
+        from: LocalDateTime,
+        toExclusive: LocalDateTime,
+        kept: List<Activity>,
+    ): Int = database.withTransaction {
+        val keys = kept.map { it.startTimeLocal.toDbString() to it.type.name }.toSet()
+        val gone = dao
+            .getInRangeFromSource(from.toDbString(), toExclusive.toDbString(), source.name)
+            .filterNot { (it.startTimeLocal to it.type) in keys }
+        if (gone.isEmpty()) 0 else dao.deleteByIds(gone.map { it.id })
     }
 
     override suspend fun deleteAllFrom(source: ActivitySourceType) =
