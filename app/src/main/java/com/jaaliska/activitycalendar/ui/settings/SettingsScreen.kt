@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
@@ -45,6 +47,8 @@ fun SettingsScreen(
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
     onColorSchemeClick: (ColorSchemeChoice) -> Unit,
+    onDemoLoadClick: () -> Unit,
+    onDemoRemoveClick: () -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -73,10 +77,28 @@ fun SettingsScreen(
                 onClick = onHealthConnectClick,
             )
             RowDivider()
-            SettingsRow(
-                title = stringResource(R.string.settings_demo_title),
-                subtitle = stringResource(R.string.settings_demo_subtitle),
-            )
+            if (state.demoActivities == 0) {
+                SettingsRow(
+                    title = stringResource(R.string.settings_demo_title),
+                    subtitle = stringResource(R.string.settings_demo_subtitle),
+                    onClick = onDemoLoadClick,
+                    trailing = {},
+                )
+            } else {
+                SettingsRow(
+                    title = stringResource(R.string.settings_demo_loaded_title),
+                    subtitle = pluralStringResource(
+                        R.plurals.settings_demo_loaded_subtitle,
+                        state.demoActivities,
+                        state.demoActivities,
+                    ),
+                    trailing = {
+                        TextButton(onClick = onDemoRemoveClick) {
+                            Text(stringResource(R.string.settings_demo_remove))
+                        }
+                    },
+                )
+            }
 
             SectionHeader(stringResource(R.string.settings_section_appearance))
 

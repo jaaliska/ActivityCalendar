@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.room.Room
 import com.jaaliska.activitycalendar.data.csv.GarminCsvParser
 import com.jaaliska.activitycalendar.data.db.AppDatabase
+import com.jaaliska.activitycalendar.data.file.AssetDemoDataFile
 import com.jaaliska.activitycalendar.data.file.ContentFileSource
 import com.jaaliska.activitycalendar.data.healthconnect.PlatformHealthConnectSource
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
@@ -15,11 +16,13 @@ import com.jaaliska.activitycalendar.data.settings.DataStoreAppearanceSettings
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.domain.AppearanceSettings
 import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
+import com.jaaliska.activitycalendar.domain.DemoDataFile
 import com.jaaliska.activitycalendar.domain.ImportHistory
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.HealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
 import com.jaaliska.activitycalendar.domain.usecase.ImportActivities
+import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
 import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
 import com.jaaliska.activitycalendar.domain.usecase.SyncHealthConnect
@@ -48,10 +51,20 @@ class AppContainer(context: Context) {
 
     val importHistory: ImportHistory = DataStoreImportHistory(context.settingsDataStore)
 
+    private val csvParser = GarminCsvParser()
+
     val importActivities = ImportActivities(
         repository = activityRepository,
-        parser = GarminCsvParser(),
+        parser = csvParser,
         importHistory = importHistory,
+    )
+
+    val demoDataFile: DemoDataFile = AssetDemoDataFile(context.assets)
+
+    val loadDemoData = LoadDemoData(
+        repository = activityRepository,
+        parser = csvParser,
+        file = demoDataFile,
     )
 
     val fileSource: FileSource = ContentFileSource(context.contentResolver)

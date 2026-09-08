@@ -5,4 +5,5 @@ enum class ActivitySourceType {
     HEALTH_CONNECT,
     GARMIN_CSV,
     MANUAL,
+    DEMO,
 }

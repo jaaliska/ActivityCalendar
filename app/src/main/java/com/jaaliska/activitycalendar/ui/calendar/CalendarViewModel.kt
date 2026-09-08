@@ -1,5 +1,6 @@
 package com.jaaliska.activitycalendar.ui.calendar
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jaaliska.activitycalendar.domain.Activity
@@ -8,6 +9,7 @@ import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.domain.usecase.CalendarWindow
 import com.jaaliska.activitycalendar.domain.usecase.DayActivities
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import com.jaaliska.activitycalendar.domain.usecase.MonthActivities
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
 import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
@@ -43,6 +45,7 @@ class CalendarViewModel(
     private val observeRecentSummary: ObserveRecentSummary,
     private val repository: ActivityRepository,
     private val getHealthConnectStatus: GetHealthConnectStatus,
+    private val loadDemoData: LoadDemoData,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
 
@@ -96,6 +99,12 @@ class CalendarViewModel(
     /** Drops the picked day, so the panel goes back to the last seven days. */
     fun clearDaySelection() {
         selectedDay.value = null
+    }
+
+    fun loadDemo() {
+        viewModelScope.launch {
+            runCatching { loadDemoData() }.onFailure { Log.w(TAG, "loading demo data failed", it) }
+        }
     }
 
     /** Reads the months again after a failure, without restarting the app. */
@@ -210,5 +219,6 @@ class CalendarViewModel(
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
         const val SLOW_READ_MILLIS = 200L
+        const val TAG = "CalendarViewModel"
     }
 }

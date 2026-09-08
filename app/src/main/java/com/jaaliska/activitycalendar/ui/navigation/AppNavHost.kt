@@ -40,6 +40,7 @@ fun AppNavHost(
                         observeRecentSummary = container.observeRecentSummary,
                         repository = container.activityRepository,
                         getHealthConnectStatus = container.getHealthConnectStatus,
+                        loadDemoData = container.loadDemoData,
                     )
                 },
             )
@@ -56,6 +57,7 @@ fun AppNavHost(
                 onSettingsClick = { navController.navigate(Destination.SETTINGS.route) },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
+                onDemoClick = calendarViewModel::loadDemo,
                 onRetry = calendarViewModel::retry,
                 onScreenResumed = calendarViewModel::refreshSyncStatus,
             )
@@ -65,8 +67,10 @@ fun AppNavHost(
                 factory = viewModelFactoryOf {
                     SettingsViewModel(
                         importHistory = container.importHistory,
+                        repository = container.activityRepository,
                         appearanceSettings = container.appearanceSettings,
                         getHealthConnectStatus = container.getHealthConnectStatus,
+                        loadDemoData = container.loadDemoData,
                     )
                 },
             )
@@ -78,6 +82,8 @@ fun AppNavHost(
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
                 onColorSchemeClick = settingsViewModel::selectColorScheme,
+                onDemoLoadClick = settingsViewModel::loadDemo,
+                onDemoRemoveClick = settingsViewModel::removeDemo,
                 onScreenResumed = settingsViewModel::refresh,
             )
         }

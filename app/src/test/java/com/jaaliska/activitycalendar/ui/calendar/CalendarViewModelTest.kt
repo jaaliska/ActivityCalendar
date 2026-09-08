@@ -3,10 +3,12 @@ package com.jaaliska.activitycalendar.ui.calendar
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
+import com.jaaliska.activitycalendar.domain.ParsedActivities
 import com.jaaliska.activitycalendar.domain.ActivityType
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
 import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +27,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.InputStream
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
@@ -319,6 +322,11 @@ class CalendarViewModelTest {
         observeRecentSummary = ObserveRecentSummary(repository),
         repository = repository,
         getHealthConnectStatus = neverConnected,
+        loadDemoData = LoadDemoData(
+            repository = repository,
+            parser = { ParsedActivities(emptyList(), emptyList()) },
+            file = { InputStream.nullInputStream() },
+        ),
         clock = clock,
     )
 
@@ -339,9 +347,13 @@ class CalendarViewModelTest {
 
         override fun observeHistoryStart(): Flow<LocalDate?> = flow { emit(historyStart) }
 
+        override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
+
         override suspend fun getMonth(month: YearMonth): List<Activity> = activities
 
         override suspend fun save(activities: List<Activity>): Int = 0
+
+        override suspend fun deleteAllFrom(source: ActivitySourceType) = Unit
     }
 
     /**
@@ -365,9 +377,13 @@ class CalendarViewModelTest {
         override fun observeHistoryStart(): Flow<LocalDate?> =
             thenReturns?.observeHistoryStart() ?: flow { emit(null) }
 
+        override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
+
         override suspend fun getMonth(month: YearMonth): List<Activity> = emptyList()
 
         override suspend fun save(activities: List<Activity>): Int = 0
+
+        override suspend fun deleteAllFrom(source: ActivitySourceType) = Unit
     }
 
     private companion object {

@@ -93,6 +93,12 @@
     <string name="settings_health_connect_unavailable">Not available on this phone</string>
     <string name="settings_demo_title">Demo data</string>
     <string name="settings_demo_subtitle">See the app without your own workouts</string>
+    <string name="settings_demo_loaded_title">Demo data loaded</string>
+    <plurals name="settings_demo_loaded_subtitle">
+        <item quantity="one">%d sample workout</item>
+        <item quantity="other">%d sample workouts</item>
+    </plurals>
+    <string name="settings_demo_remove">Remove</string>
     <string name="settings_color_scheme_title">Color scheme</string>
     <string name="settings_color_scheme_crimson">Crimson</string>
     <string name="settings_color_scheme_blue">Blue</string>

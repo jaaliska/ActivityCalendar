@@ -9,6 +9,7 @@ import com.jaaliska.activitycalendar.data.db.toEntity
 import com.jaaliska.activitycalendar.data.db.toLocalDateTimeOrThrow
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import com.jaaliska.activitycalendar.domain.mergeDuplicates
 import com.jaaliska.activitycalendar.domain.mergeWith
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,9 @@ class RoomActivityRepository(private val database: AppDatabase) : ActivityReposi
     override fun observeHistoryStart(): Flow<LocalDate?> =
         dao.observeEarliestStart().map { it?.toLocalDateTimeOrThrow()?.toLocalDate() }
 
+    override fun observeCountFrom(source: ActivitySourceType): Flow<Int> =
+        dao.observeCountOfSource(source.name)
+
     override suspend fun getMonth(month: YearMonth): List<Activity> {
         val from = month.atDay(1).atStartOfDay().toDbString()
         val to = month.plusMonths(1).atDay(1).atStartOfDay().toDbString()
@@ -40,6 +44,9 @@ class RoomActivityRepository(private val database: AppDatabase) : ActivityReposi
         mergeIntoStored(alreadyStored)
         rowIds.count { it != SKIPPED }
     }
+
+    override suspend fun deleteAllFrom(source: ActivitySourceType) =
+        dao.deleteBySource(source.name)
 
     /** Applies what [activities] know to the rows already holding the same activities. */
     private suspend fun mergeIntoStored(activities: List<Activity>) {

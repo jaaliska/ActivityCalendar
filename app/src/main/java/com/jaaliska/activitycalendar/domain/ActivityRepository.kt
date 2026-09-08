@@ -16,6 +16,9 @@ interface ActivityRepository {
     /** Emits the day of the oldest stored activity, `null` while the database is empty. */
     fun observeHistoryStart(): Flow<LocalDate?>
 
+    /** Emits how many stored activities came from [source]. */
+    fun observeCountFrom(source: ActivitySourceType): Flow<Int>
+
     /** Returns the activities of [month], oldest first. */
     suspend fun getMonth(month: YearMonth): List<Activity>
 
@@ -26,4 +29,7 @@ interface ActivityRepository {
      * @return how many activities were new
      */
     suspend fun save(activities: List<Activity>): Int
+
+    /** Removes every stored activity that came from [source]. */
+    suspend fun deleteAllFrom(source: ActivitySourceType)
 }

@@ -63,6 +63,7 @@ fun CalendarScreen(
     onSettingsClick: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
+    onDemoClick: () -> Unit,
     onRetry: () -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
@@ -99,6 +100,7 @@ fun CalendarScreen(
                 CalendarUiState.NoData -> NoDataState(
                     onImportClick = onImportClick,
                     onHealthConnectClick = onHealthConnectClick,
+                    onDemoClick = onDemoClick,
                 )
 
                 is CalendarUiState.Failed -> {
