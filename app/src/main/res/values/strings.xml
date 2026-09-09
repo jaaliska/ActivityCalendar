@@ -11,9 +11,22 @@
     <string name="health_connect_title">Health Connect</string>
 
     <string name="activity_badminton">Badminton</string>
+    <string name="activity_basketball">Basketball</string>
+    <string name="activity_boxing">Boxing</string>
     <string name="activity_cycling">Cycling</string>
+    <string name="activity_dancing">Dancing</string>
+    <string name="activity_hiking">Hiking</string>
+    <string name="activity_martial_arts">Martial arts</string>
     <string name="activity_running">Running</string>
+    <string name="activity_skiing">Skiing</string>
+    <string name="activity_snowboarding">Snowboarding</string>
+    <string name="activity_soccer">Soccer</string>
     <string name="activity_strength_training">Strength</string>
+    <string name="activity_stretching">Stretching</string>
+    <string name="activity_swimming">Swimming</string>
+    <string name="activity_table_tennis">Table tennis</string>
+    <string name="activity_tennis">Tennis</string>
+    <string name="activity_volleyball">Volleyball</string>
     <string name="activity_walking">Walking</string>
     <string name="activity_yoga">Yoga</string>
     <string name="activity_other">Other</string>
@@ -51,17 +64,69 @@
         <item quantity="one">%1$d Badminton</item>
         <item quantity="other">%1$d Badminton</item>
     </plurals>
+    <plurals name="panel_count_basketball">
+        <item quantity="one">%1$d Basketball</item>
+        <item quantity="other">%1$d Basketball</item>
+    </plurals>
+    <plurals name="panel_count_boxing">
+        <item quantity="one">%1$d Boxing</item>
+        <item quantity="other">%1$d Boxing</item>
+    </plurals>
     <plurals name="panel_count_cycling">
         <item quantity="one">%1$d Ride</item>
         <item quantity="other">%1$d Rides</item>
+    </plurals>
+    <plurals name="panel_count_dancing">
+        <item quantity="one">%1$d Dancing</item>
+        <item quantity="other">%1$d Dancing</item>
+    </plurals>
+    <plurals name="panel_count_hiking">
+        <item quantity="one">%1$d Hike</item>
+        <item quantity="other">%1$d Hikes</item>
+    </plurals>
+    <plurals name="panel_count_martial_arts">
+        <item quantity="one">%1$d Martial arts</item>
+        <item quantity="other">%1$d Martial arts</item>
     </plurals>
     <plurals name="panel_count_running">
         <item quantity="one">%1$d Run</item>
         <item quantity="other">%1$d Runs</item>
     </plurals>
+    <plurals name="panel_count_skiing">
+        <item quantity="one">%1$d Skiing</item>
+        <item quantity="other">%1$d Skiing</item>
+    </plurals>
+    <plurals name="panel_count_snowboarding">
+        <item quantity="one">%1$d Snowboarding</item>
+        <item quantity="other">%1$d Snowboarding</item>
+    </plurals>
+    <plurals name="panel_count_soccer">
+        <item quantity="one">%1$d Soccer</item>
+        <item quantity="other">%1$d Soccer</item>
+    </plurals>
     <plurals name="panel_count_strength_training">
         <item quantity="one">%1$d Strength</item>
         <item quantity="other">%1$d Strength</item>
+    </plurals>
+    <plurals name="panel_count_stretching">
+        <item quantity="one">%1$d Stretching</item>
+        <item quantity="other">%1$d Stretching</item>
+    </plurals>
+    <plurals name="panel_count_swimming">
+        <item quantity="one">%1$d Swim</item>
+        <item quantity="other">%1$d Swims</item>
+    </plurals>
+    <plurals name="panel_count_table_tennis">
+        <item quantity="one">%1$d Table tennis</item>
+        <item quantity="other">%1$d Table tennis</item>
+    </plurals>
+    <plurals name="panel_count_tennis">
+        <item quantity="one">%1$d Tennis</item>
+        <item quantity="other">%1$d Tennis</item>
+    </plurals>
+    <plurals name="panel_count_volleyball">
+        <item quantity="one">%1$d Volleyball</item>
+        <item quantity="other">%1$d Volleyball</item>
     </plurals>
     <plurals name="panel_count_walking">
         <item quantity="one">%1$d Walk</item>

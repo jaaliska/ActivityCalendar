@@ -13,24 +13,30 @@ SWATCHES = [
     "#E53935", "#EF6C00", "#F9A825", "#7CB342", "#2E7D32", "#00897B",
     "#0288D1", "#3949AB", "#7B4DFF", "#C2185B", "#6D4C41", "#546E7A",
 ]
-PRESETS = {
-    "Выбранная": dict(L.COLORS),
-    "Яркая": {"badminton": "#7B4DFF", "cycling": "#0288D1", "walking": "#2E7D32",
-              "running": "#EF6C00", "strength": "#3949AB", "yoga": "#C2185B",
-              "other": "#546E7A"},
-    "Тёплая": {"badminton": "#6D4C41", "cycling": "#00897B", "walking": "#7CB342",
-               "running": "#E53935", "strength": "#3949AB", "yoga": "#F9A825",
-               "other": "#546E7A"},
-}
-BLIND_ORDER = ["yoga", "running", "other", "walking", "badminton", "strength", "cycling"]
+PRESETS = {"Выбранная": dict(L.COLORS)}
+# Neighbours in the list are from different families: the test is about the glyph alone.
+BLIND_ORDER = [
+    "yoga", "basketball", "running", "swimming", "badminton", "boxing", "walking",
+    "table_tennis", "strength", "skiing", "dancing", "soccer", "hiking",
+    "cycling", "martial_arts", "stretching", "tennis", "other", "snowboarding",
+    "volleyball",
+]
+
+
+PER_ROW = 7
 
 
 def size_rows(icons):
-    out = ['<div class="row heads">'
-           + "".join(f'<div class="cap">{L.LABELS[t]}</div>' for t in L.TYPES) + "</div>"]
-    for px in (40, 24, 20, 16):
-        cells = "".join(f'<div class="cell">{L.icon(icons, t, px)}</div>' for t in L.TYPES)
-        out.append(f'<div class="row"><div class="sz">{px}</div>{cells}</div>')
+    """The set at every size that matters, seven types at a time so a phone shows them whole."""
+    out = []
+    for start in range(0, len(L.TYPES), PER_ROW):
+        chunk = L.TYPES[start:start + PER_ROW]
+        out.append('<div class="row heads">'
+                   + "".join(f'<div class="cap">{L.LABELS[t]}</div>' for t in chunk) + "</div>")
+        for px in (40, 24, 20, 16):
+            cells = "".join(f'<div class="cell">{L.icon(icons, t, px)}</div>' for t in chunk)
+            out.append(f'<div class="row"><div class="sz">{px}</div>{cells}</div>')
+        out.append('<div class="gap"></div>')
     return "\n".join(out)
 
 
@@ -87,7 +93,7 @@ def build():
 <article class="set">
   <h1>{name}</h1>{warn}
   {section("1. Слепая проверка на 16dp", blind(icons))}
-  {section("2. Цвет на тип", color_tool(icons))}
+  {section("2. Цвет на семейство", color_tool(icons))}
   {section("3. Размеры, монохром", size_rows(icons))}
   {section("4. Ячейка календаря, реальный размер", day_strip(icons))}
   {section("5. Август 2026, монохром", L.month_grid(icons, colored=False))}
@@ -101,6 +107,8 @@ def build():
 <title>Проверка иконок 16-20dp</title>
 <style>{L.base_css()}
 .row {{ display:flex; align-items:center; gap:4px; margin-bottom:6px; }}
+.gap {{ height:14px; }}
+.strip {{ flex-wrap:wrap; row-gap:4px; }}
 .row .sz {{ width:20px; font-size:10px; color:var(--dim); text-align:right; }}
 .row.heads {{ padding-left:24px; }}
 .cap {{ flex:1; font-size:9px; color:var(--dim); text-align:center; }}

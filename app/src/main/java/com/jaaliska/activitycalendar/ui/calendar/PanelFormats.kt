@@ -53,9 +53,22 @@ fun periodText(from: LocalDate, to: LocalDate): String {
 @PluralsRes
 private fun ActivityType.countRes(): Int = when (this) {
     ActivityType.BADMINTON -> R.plurals.panel_count_badminton
+    ActivityType.BASKETBALL -> R.plurals.panel_count_basketball
+    ActivityType.BOXING -> R.plurals.panel_count_boxing
     ActivityType.CYCLING -> R.plurals.panel_count_cycling
+    ActivityType.DANCING -> R.plurals.panel_count_dancing
+    ActivityType.HIKING -> R.plurals.panel_count_hiking
+    ActivityType.MARTIAL_ARTS -> R.plurals.panel_count_martial_arts
     ActivityType.RUNNING -> R.plurals.panel_count_running
+    ActivityType.SKIING -> R.plurals.panel_count_skiing
+    ActivityType.SNOWBOARDING -> R.plurals.panel_count_snowboarding
+    ActivityType.SOCCER -> R.plurals.panel_count_soccer
     ActivityType.STRENGTH_TRAINING -> R.plurals.panel_count_strength_training
+    ActivityType.STRETCHING -> R.plurals.panel_count_stretching
+    ActivityType.SWIMMING -> R.plurals.panel_count_swimming
+    ActivityType.TABLE_TENNIS -> R.plurals.panel_count_table_tennis
+    ActivityType.TENNIS -> R.plurals.panel_count_tennis
+    ActivityType.VOLLEYBALL -> R.plurals.panel_count_volleyball
     ActivityType.WALKING -> R.plurals.panel_count_walking
     ActivityType.YOGA -> R.plurals.panel_count_yoga
     ActivityType.UNKNOWN -> R.plurals.panel_count_other
