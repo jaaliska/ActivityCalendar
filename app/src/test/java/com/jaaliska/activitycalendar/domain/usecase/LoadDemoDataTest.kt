@@ -22,16 +22,16 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.time.Clock
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 @RunWith(RobolectricTestRunner::class)
 class LoadDemoDataTest {
 
-    private val today = LocalDate.of(2027, 2, 11)
-    private val clock = Clock.fixed(
-        today.atStartOfDay(ZoneId.systemDefault()).toInstant(),
-        ZoneId.systemDefault(),
-    )
+    // A Thursday, so the current week is only half over when the samples land.
+    private val now = LocalDateTime.of(2027, 2, 11, 21, 0)
+    private val today = now.toLocalDate()
+    private val clock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault())
 
     private lateinit var database: AppDatabase
     private lateinit var repository: ActivityRepository
@@ -62,16 +62,30 @@ class LoadDemoDataTest {
 
     @Test
     fun `the samples end in the last seven days and keep their weekday and time`() = runTest {
-        val newestInFile = file.open().use { GarminCsvParser().parse(it) }
-            .activities
-            .maxOf { it.startTimeLocal }
-
         loadDemoData()
 
         val newestStored = stored().maxOf { it.startTimeLocal }
         assertTrue(newestStored.toLocalDate() in today.minusDays(6)..today)
-        assertEquals(newestInFile.dayOfWeek, newestStored.dayOfWeek)
-        assertEquals(newestInFile.toLocalTime(), newestStored.toLocalTime())
+        val sameWeekday = stored().all { activity ->
+            weekdaysInFile.contains(activity.startTimeLocal.dayOfWeek)
+        }
+        assertTrue("samples moved off their weekdays", sameWeekday)
+    }
+
+    @Test
+    fun `the last seven days are filled whatever day the samples are loaded on`() = runTest {
+        loadDemoData()
+
+        val lastWeek = stored().filter { it.startTimeLocal.toLocalDate() >= today.minusDays(6) }
+
+        assertTrue("only ${lastWeek.size} in the last seven days", lastWeek.size >= 4)
+    }
+
+    @Test
+    fun `no sample lands in the future`() = runTest {
+        loadDemoData()
+
+        assertTrue(stored().all { it.startTimeLocal <= now })
     }
 
     @Test
@@ -91,6 +105,12 @@ class LoadDemoDataTest {
         assertEquals(0, loadDemoData())
         assertEquals(added, stored().size)
     }
+
+    private val weekdaysInFile: Set<java.time.DayOfWeek>
+        get() = file.open().use { GarminCsvParser().parse(it) }
+            .activities
+            .map { it.startTimeLocal.dayOfWeek }
+            .toSet()
 
     private suspend fun stored() = repository
         .observeRange(LocalDate.of(1970, 1, 1), today.plusDays(1))
