@@ -1,25 +1,25 @@
 Activity Type,Date,Title,Distance,Time
-Cycling,2026-09-05 11:15:08,Weekend Ride,23.66,01:01:37
+Cycling,2026-09-05 11:15:08,Morning Ride,23.66,01:01:37
 Strength Training,2026-09-03 18:10:56,Gym,--,00:47:33
-Swimming,2026-09-02 15:40:27,Pool Swim,1.45,00:50:19
+Swimming,2026-09-02 15:40:27,Open Water Swim,1.45,00:50:19
 Walking,2026-08-31 16:40:28,City Walk,8.99,00:41:38
 Swimming,2026-08-30 14:00:33,Open Water Swim,2.34,00:41:09
-Running,2026-08-29 07:10:30,Evening Run,6.29,00:43:42
+Running,2026-08-29 07:10:30,Morning Run,6.29,00:43:42
 Walking,2026-08-28 14:40:59,City Walk,5.78,01:26:54
 Cycling,2026-08-26 13:15:26,Weekend Ride,21.09,01:52:22
 Strength Training,2026-08-25 19:15:26,Strength Training,--,00:54:36
-Running,2026-08-25 07:00:08,Evening Run,9.89,00:54:13
+Running,2026-08-25 07:00:08,Easy Run,9.89,00:54:13
 Hiking,2026-08-23 11:10:24,Forest Hike,7.80,02:21:03
 Stretching,2026-08-22 20:00:19,Stretching,--,00:26:10
 Running,2026-08-22 06:45:46,Morning Run,10.64,00:47:39
-Swimming,2026-08-20 08:15:38,Open Water Swim,1.51,00:36:26
-Running,2026-08-19 08:00:33,Evening Run,9.61,00:47:09
+Swimming,2026-08-20 08:15:38,Pool Swim,1.51,00:36:26
+Running,2026-08-19 08:00:33,Morning Run,9.61,00:47:09
 Stretching,2026-08-17 20:40:00,Stretching,--,00:28:15
 Tennis,2026-08-17 17:15:11,Tennis,--,01:09:07
 Running,2026-08-16 06:00:00,Easy Run,8.72,00:57:30
-Walking,2026-08-14 14:10:42,Evening Walk,8.86,00:48:10
+Walking,2026-08-14 14:10:42,Weekend Walk,8.86,00:48:10
 Stretching,2026-08-13 21:10:14,Stretching,--,00:22:30
-Yoga,2026-08-13 19:30:53,Morning Yoga,--,00:42:50
+Yoga,2026-08-13 19:30:53,Evening Yoga,--,00:42:50
 Walking,2026-08-13 14:10:21,City Walk,8.22,01:20:19
 Running,2026-08-11 07:45:56,Easy Run,8.49,00:42:51
 Strength Training,2026-08-09 18:30:44,Strength Training,--,00:56:59
@@ -28,7 +28,7 @@ Stretching,2026-08-07 21:10:14,Stretching,--,00:28:25
 Basketball,2026-08-06 17:20:42,Basketball,--,01:06:00
 Soccer,2026-08-04 20:05:15,Football,--,01:04:36
 Cycling,2026-08-02 16:40:26,Weekend Ride,28.70,00:57:22
-Running,2026-07-31 06:05:30,Long Run,11.72,00:48:45
+Running,2026-07-31 06:05:30,Morning Run,11.72,00:48:45
 Stretching,2026-07-30 20:10:16,Stretching,--,00:22:25
 Badminton,2026-07-30 17:45:02,Badminton,--,01:04:15
 Walking,2026-07-28 13:10:19,City Walk,4.08,01:23:51
@@ -36,7 +36,7 @@ Strength Training,2026-07-25 18:10:07,Gym,--,00:39:13
 Cycling,2026-07-23 14:10:15,Long Ride,41.26,02:07:19
 Strength Training,2026-07-20 17:15:49,Strength Training,--,00:40:34
 Cycling,2026-07-19 15:20:35,Long Ride,35.46,01:23:30
-Cycling,2026-07-18 14:00:16,Evening Ride,32.49,01:35:48
+Cycling,2026-07-18 14:00:16,Weekend Ride,32.49,01:35:48
 Kitesurfing,2026-07-17 14:10:41,Kitesurfing,8.63,00:57:16
 Stretching,2026-07-15 20:05:06,Stretching,--,00:20:08
 Hiking,2026-07-15 09:10:43,Forest Hike,12.60,03:11:01
@@ -48,10 +48,10 @@ Running,2026-07-08 07:45:10,Easy Run,8.80,00:46:20
 Strength Training,2026-07-06 18:20:01,Strength Training,--,00:45:46
 Running,2026-07-05 08:10:52,Easy Run,6.43,00:40:21
 Running,2026-07-03 06:10:40,Easy Run,6.82,01:01:38
-Cycling,2026-06-30 12:30:28,Evening Ride,38.47,01:27:02
+Cycling,2026-06-30 12:30:28,Weekend Ride,38.47,01:27:02
 Badminton,2026-06-27 20:30:42,Badminton,--,01:18:17
 Stretching,2026-06-25 21:10:58,Stretching,--,00:17:12
-Yoga,2026-06-25 19:40:11,Morning Yoga,--,00:55:59
+Yoga,2026-06-25 19:40:11,Evening Yoga,--,00:55:59
 Walking,2026-06-25 11:45:38,City Walk,6.60,01:05:57
 Rowing,2026-06-22 19:40:33,Rowing Session,7.02,00:38:10
 Volleyball,2026-06-21 17:05:26,Volleyball,--,01:09:54
@@ -59,7 +59,7 @@ Martial Arts,2026-06-20 17:15:35,Martial Arts,--,01:06:50
 Walking,2026-06-20 16:30:54,City Walk,5.46,00:36:26
 Stretching,2026-06-18 21:15:31,Stretching,--,00:26:15
 Yoga,2026-06-17 20:00:40,Evening Yoga,--,00:48:36
-Walking,2026-06-17 11:20:50,Weekend Walk,6.49,01:07:21
+Walking,2026-06-17 11:20:50,Morning Walk,6.49,01:07:21
 Strength Training,2026-06-15 18:10:05,Gym,--,00:55:45
 Stretching,2026-06-14 20:40:37,Stretching,--,00:28:23
 Tennis,2026-06-14 19:40:59,Tennis,--,01:24:49
@@ -71,13 +71,13 @@ Walking,2026-06-07 16:20:24,Weekend Walk,5.67,01:24:38
 Running,2026-06-06 08:10:35,Easy Run,10.29,00:45:41
 Badminton,2026-06-04 18:00:17,Badminton,--,01:07:48
 Badminton,2026-06-02 19:20:48,Badminton,--,01:05:48
-Cycling,2026-06-01 13:15:30,Evening Ride,34.56,01:09:08
+Cycling,2026-06-01 13:15:30,Weekend Ride,34.56,01:09:08
 Snowboarding,2026-06-01 10:15:10,Snowboarding,12.63,02:39:51
 Badminton,2026-05-31 20:30:33,Badminton,--,01:02:31
-Yoga,2026-05-29 19:40:03,Morning Yoga,--,00:49:05
+Yoga,2026-05-29 19:40:03,Evening Yoga,--,00:49:05
 Walking,2026-05-29 17:15:38,Easy Walk,3.87,01:18:29
 Skiing,2026-05-29 09:05:25,Ski Day,17.80,03:01:15
-Walking,2026-05-27 15:15:37,Evening Walk,3.08,00:37:42
+Walking,2026-05-27 15:15:37,City Walk,3.08,00:37:42
 Strength Training,2026-05-26 19:45:26,Gym,--,00:49:14
 Strength Training,2026-05-24 17:00:24,Gym,--,00:44:38
 Badminton,2026-05-23 17:20:57,Badminton,--,01:10:20
@@ -85,27 +85,27 @@ Stretching,2026-05-21 20:45:25,Stretching,--,00:17:14
 Strength Training,2026-05-21 18:05:48,Strength Training,--,00:52:27
 Swimming,2026-05-20 13:20:21,Open Water Swim,1.53,00:41:48
 Stretching,2026-05-18 20:10:57,Stretching,--,00:26:45
-Yoga,2026-05-17 20:30:51,Morning Yoga,--,00:53:06
+Yoga,2026-05-17 20:30:51,Evening Yoga,--,00:53:06
 Stretching,2026-05-16 21:10:06,Stretching,--,00:14:22
-Cycling,2026-05-14 15:00:54,Evening Ride,31.75,01:18:46
-Yoga,2026-05-12 19:45:06,Morning Yoga,--,00:28:09
+Cycling,2026-05-14 15:00:54,Weekend Ride,31.75,01:18:46
+Yoga,2026-05-12 19:45:06,Evening Yoga,--,00:28:09
 Walking,2026-05-12 12:45:04,Weekend Walk,3.81,01:21:24
 Tennis,2026-05-11 17:05:45,Tennis,--,01:16:42
-Running,2026-05-10 06:40:34,Evening Run,5.68,00:58:32
+Running,2026-05-10 06:40:34,Morning Run,5.68,00:58:32
 Strength Training,2026-05-08 18:15:44,Gym,--,00:57:44
-Walking,2026-05-08 14:15:56,Evening Walk,4.31,00:39:34
-Running,2026-05-08 07:15:33,Evening Run,11.05,00:45:37
+Walking,2026-05-08 14:15:56,Weekend Walk,4.31,00:39:34
+Running,2026-05-08 07:15:33,Easy Run,11.05,00:45:37
 Running,2026-05-06 06:00:43,Easy Run,6.09,00:46:22
 Strength Training,2026-05-05 18:30:06,Strength Training,--,00:45:47
 Kitesurfing,2026-05-03 11:45:26,Kitesurfing,8.65,01:20:24
-Running,2026-05-01 08:00:34,Long Run,9.24,00:39:12
+Running,2026-05-01 08:00:34,Easy Run,9.24,00:39:12
 Table Tennis,2026-04-29 19:20:54,Table Tennis,--,00:44:19
 Strength Training,2026-04-28 19:45:33,Strength Training,--,00:56:14
-Yoga,2026-04-26 19:10:33,Morning Yoga,--,00:53:12
+Yoga,2026-04-26 19:10:33,Evening Yoga,--,00:53:12
 Strength Training,2026-04-26 18:15:51,Strength Training,--,00:41:49
 Soccer,2026-04-25 17:00:22,Football,--,01:14:21
 Soccer,2026-04-23 20:30:41,Football,--,01:04:25
-Swimming,2026-04-21 15:40:08,Pool Swim,1.69,00:48:56
+Swimming,2026-04-21 15:40:08,Open Water Swim,1.69,00:48:56
 Strength Training,2026-04-20 19:15:12,Strength Training,--,00:54:05
 Stretching,2026-04-18 20:00:40,Stretching,--,00:17:54
 Badminton,2026-04-18 19:00:41,Badminton,--,01:03:43
@@ -120,15 +120,15 @@ Stretching,2026-04-05 20:30:05,Stretching,--,00:31:50
 Stretching,2026-04-02 21:05:04,Stretching,--,00:29:19
 Boxing,2026-04-02 20:00:38,Boxing,--,01:03:19
 Walking,2026-03-31 18:10:57,Evening Walk,3.55,01:02:24
-Running,2026-03-29 08:05:17,Evening Run,6.60,00:45:54
-Running,2026-03-28 06:40:16,Long Run,10.18,00:52:30
+Running,2026-03-29 08:05:17,Easy Run,6.60,00:45:54
+Running,2026-03-28 06:40:16,Easy Run,10.18,00:52:30
 Stretching,2026-03-27 20:40:56,Stretching,--,00:30:34
 Yoga,2026-03-25 19:20:58,Evening Yoga,--,00:38:29
 Cycling,2026-03-25 10:10:37,Long Ride,31.42,01:57:33
 Stretching,2026-03-24 20:20:00,Stretching,--,00:26:32
 Strength Training,2026-03-24 17:40:54,Strength Training,--,00:59:44
 Running,2026-03-22 08:05:25,Morning Run,9.51,00:49:54
-Running,2026-03-19 08:45:11,Evening Run,5.42,00:59:23
+Running,2026-03-19 08:45:11,Easy Run,5.42,00:59:23
 Yoga,2026-03-17 20:20:21,Evening Yoga,--,00:29:44
 Cycling,2026-03-17 13:40:26,Long Ride,27.16,01:04:24
 Strength Training,2026-03-15 17:15:32,Strength Training,--,00:47:07
