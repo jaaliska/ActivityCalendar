@@ -241,6 +241,7 @@
     <string name="health_connect_sync_now">Sync now</string>
     <string name="health_connect_rebuild">Rebuild from Health Connect</string>
     <string name="health_connect_sync_up_to_date">Already up to date</string>
+    <string name="health_connect_just_now">just now</string>
     <plurals name="health_connect_sync_added">
         <item quantity="one">%d new workout</item>
         <item quantity="other">%d new workouts</item>

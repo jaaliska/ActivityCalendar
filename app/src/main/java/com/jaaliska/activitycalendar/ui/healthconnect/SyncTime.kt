@@ -14,13 +14,19 @@ import java.util.Locale
 private val CLOCK_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
 private val DAY_AND_MONTH: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM", Locale.ENGLISH)
 
-/** How long ago [instant] was, the way the phone words it: "5 minutes ago". */
-fun timeAgo(instant: Instant, now: Instant = Instant.now()): String =
-    DateUtils.getRelativeTimeSpanString(
+/** How long ago [instant] was, the way the phone words it: "5 minutes ago", "just now". */
+@Composable
+fun timeAgo(instant: Instant, now: Instant = Instant.now()): String {
+    val elapsed = now.toEpochMilli() - instant.toEpochMilli()
+    if (elapsed < DateUtils.MINUTE_IN_MILLIS) {
+        return stringResource(R.string.health_connect_just_now)
+    }
+    return DateUtils.getRelativeTimeSpanString(
         instant.toEpochMilli(),
         now.toEpochMilli(),
         DateUtils.MINUTE_IN_MILLIS,
     ).toString()
+}
 
 /** The clock time of [instant]: 08:12. */
 fun clockTime(instant: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
