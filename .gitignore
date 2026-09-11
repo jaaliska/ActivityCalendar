@@ -8,6 +8,7 @@ build/
 *.iml
 *.jks
 *.keystore
+*.p12
 .DS_Store
 
 # Выгрузка персональных данных Garmin - держим вне репозитория
