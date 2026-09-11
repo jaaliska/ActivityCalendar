@@ -9,11 +9,13 @@ import com.jaaliska.activitycalendar.data.db.toEntity
 import com.jaaliska.activitycalendar.data.db.toLocalDateTimeOrThrow
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import com.jaaliska.activitycalendar.domain.mergeDuplicates
 import com.jaaliska.activitycalendar.domain.mergeWith
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 class RoomActivityRepository(private val database: AppDatabase) : ActivityRepository {
@@ -26,6 +28,11 @@ class RoomActivityRepository(private val database: AppDatabase) : ActivityReposi
 
     override fun observeHistoryStart(): Flow<LocalDate?> =
         dao.observeEarliestStart().map { it?.toLocalDateTimeOrThrow()?.toLocalDate() }
+
+    override suspend fun getAll(): List<Activity> = dao.getAll().map { it.toDomain() }
+
+    override fun observeCountFrom(source: ActivitySourceType): Flow<Int> =
+        dao.observeCountOfSource(source.name)
 
     override suspend fun getMonth(month: YearMonth): List<Activity> {
         val from = month.atDay(1).atStartOfDay().toDbString()
@@ -40,6 +47,22 @@ class RoomActivityRepository(private val database: AppDatabase) : ActivityReposi
         mergeIntoStored(alreadyStored)
         rowIds.count { it != SKIPPED }
     }
+
+    override suspend fun deleteMissing(
+        source: ActivitySourceType,
+        from: LocalDateTime,
+        toExclusive: LocalDateTime,
+        kept: List<Activity>,
+    ): Int = database.withTransaction {
+        val keys = kept.map { it.startTimeLocal.toDbString() to it.type.name }.toSet()
+        val gone = dao
+            .getInRangeFromSource(from.toDbString(), toExclusive.toDbString(), source.name)
+            .filterNot { (it.startTimeLocal to it.type) in keys }
+        if (gone.isEmpty()) 0 else dao.deleteByIds(gone.map { it.id })
+    }
+
+    override suspend fun deleteAllFrom(source: ActivitySourceType) =
+        dao.deleteBySource(source.name)
 
     /** Applies what [activities] know to the rows already holding the same activities. */
     private suspend fun mergeIntoStored(activities: List<Activity>) {

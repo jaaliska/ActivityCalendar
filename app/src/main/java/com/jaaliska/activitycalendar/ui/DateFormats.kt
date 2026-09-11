@@ -20,3 +20,6 @@ val UI_PERIOD_DAY_OF_MONTH: DateTimeFormatter = DateTimeFormatter.ofPattern("d",
 
 /** Start times inside a day: 07:12. */
 val UI_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
+
+/** Days inside a file name: 2026-09-08. */
+val UI_FILE_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH)

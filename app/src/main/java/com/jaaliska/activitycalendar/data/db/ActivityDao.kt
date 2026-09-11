@@ -26,6 +26,14 @@ interface ActivityDao {
     )
     suspend fun getInRange(fromInclusive: String, toExclusive: String): List<ActivityEntity>
 
+    /** Returns every stored activity, oldest first. */
+    @Query("SELECT * FROM activities ORDER BY startTimeLocal, id")
+    suspend fun getAll(): List<ActivityEntity>
+
+    /** Emits how many stored activities came from [source]. */
+    @Query("SELECT COUNT(*) FROM activities WHERE source = :source")
+    fun observeCountOfSource(source: String): Flow<Int>
+
     /** Emits the start time of the oldest stored activity, `null` while nothing is stored. */
     @Query("SELECT MIN(startTimeLocal) FROM activities")
     fun observeEarliestStart(): Flow<String?>
@@ -45,6 +53,25 @@ interface ActivityDao {
     /** Rewrites the given rows, each matched by its id. */
     @Update
     suspend fun updateAll(activities: List<ActivityEntity>)
+
+    /** Returns the activities of [source] started in `[fromInclusive, toExclusive)`. */
+    @Query(
+        "SELECT * FROM activities " +
+            "WHERE source = :source AND startTimeLocal >= :fromInclusive " +
+            "AND startTimeLocal < :toExclusive"
+    )
+    suspend fun getInRangeFromSource(
+        fromInclusive: String,
+        toExclusive: String,
+        source: String,
+    ): List<ActivityEntity>
+
+    /** @return how many rows were removed */
+    @Query("DELETE FROM activities WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>): Int
+
+    @Query("DELETE FROM activities WHERE source = :source")
+    suspend fun deleteBySource(source: String)
 
     @Query("DELETE FROM activities")
     suspend fun clear()

@@ -117,9 +117,22 @@ class ObserveRecentSummaryTest {
 
         override fun observeHistoryStart(): Flow<LocalDate?> = flow { emit(null) }
 
+        override suspend fun getAll(): List<Activity> = emptyList()
+
+        override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
+
         override suspend fun getMonth(month: YearMonth): List<Activity> = emptyList()
 
         override suspend fun save(activities: List<Activity>): Int = 0
+
+        override suspend fun deleteMissing(
+            source: ActivitySourceType,
+            from: LocalDateTime,
+            toExclusive: LocalDateTime,
+            kept: List<Activity>,
+        ): Int = 0
+
+        override suspend fun deleteAllFrom(source: ActivitySourceType) = Unit
     }
 
     private companion object {

@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.source.FixtureActivitySource
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -77,6 +78,23 @@ class RoomActivityRepositoryTest {
 
         assertEquals(2, repository.getMonth(YearMonth.of(2026, 9)).size)
         assertEquals(2, repository.getMonth(YearMonth.of(2026, 7)).size)
+    }
+
+    @Test
+    fun `deleting one source leaves the rows of the others`() = runTest {
+        val own = FixtureActivitySource.ALL
+        val demo = own.map {
+            it.copy(
+                startTimeLocal = it.startTimeLocal.plusYears(1),
+                source = ActivitySourceType.DEMO,
+            )
+        }
+        repository.save(own + demo)
+
+        repository.deleteAllFrom(ActivitySourceType.DEMO)
+
+        assertEquals(0, repository.observeCountFrom(ActivitySourceType.DEMO).first())
+        assertEquals(own.size, repository.observeCountFrom(ActivitySourceType.GARMIN_CSV).first())
     }
 
     @Test

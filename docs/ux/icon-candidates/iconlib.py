@@ -6,21 +6,41 @@ import os
 import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TYPES = ["badminton", "cycling", "walking", "running", "strength", "yoga", "other"]
+TYPES = [
+    "running", "walking", "hiking", "cycling",
+    "badminton", "tennis", "table_tennis",
+    "basketball", "volleyball", "soccer",
+    "boxing", "martial_arts",
+    "swimming", "skiing", "snowboarding",
+    "strength", "yoga", "stretching", "dancing", "other",
+]
 LABELS = {
-    "badminton": "Badminton", "cycling": "Cycling", "walking": "Walking",
-    "running": "Running", "strength": "Strength", "yoga": "Yoga", "other": "Other",
+    "running": "Running", "walking": "Walking", "hiking": "Hiking", "cycling": "Cycling",
+    "badminton": "Badminton", "tennis": "Tennis", "table_tennis": "Table tennis",
+    "squash": "Squash", "basketball": "Basketball", "volleyball": "Volleyball",
+    "soccer": "Soccer", "boxing": "Boxing", "martial_arts": "Martial arts",
+    "swimming": "Swimming", "skiing": "Skiing", "snowboarding": "Snowboarding",
+    "strength": "Strength", "yoga": "Yoga", "stretching": "Stretching",
+    "dancing": "Dancing", "other": "Other",
 }
 # Optical size correction, measured on a real phone at 16-20dp
-SCALES = {
-    "badminton": 0.90, "cycling": 1.00, "walking": 1.00, "running": 1.00,
-    "strength": 1.00, "yoga": 0.84, "other": 1.00,
+SCALES = {t: 1.00 for t in TYPES}
+SCALES.update({"badminton": 1.30, "yoga": 0.84})
+
+# One colour per family: the colour says what kind of sport it is, the glyph says which one.
+FAMILIES = {
+    "#EF6C00": ["running"],
+    "#00897B": ["walking", "hiking"],
+    "#7CB342": ["cycling"],
+    "#C2185B": ["badminton", "tennis", "table_tennis"],
+    "#7B4DFF": ["basketball", "volleyball", "soccer"],
+    "#E53935": ["boxing", "martial_arts"],
+    "#0288D1": ["swimming", "skiing", "snowboarding"],
+    "#6D4C41": ["strength"],
+    "#3949AB": ["yoga", "stretching", "dancing"],
+    "#546E7A": ["other"],
 }
-# Chosen 2026-08-25 on the phone
-COLORS = {
-    "badminton": "#C2185B", "cycling": "#0288D1", "walking": "#00897B",
-    "running": "#EF6C00", "strength": "#6D4C41", "yoga": "#3949AB", "other": "#546E7A",
-}
+COLORS = {t: colour for colour, types in FAMILIES.items() for t in types}
 # The dark theme lifts the activity palette towards white; no separate palette exists.
 DARK_LIGHTEN = 0.42
 
@@ -28,12 +48,12 @@ DARK_LIGHTEN = 0.42
 # neighbouring days the August grid shows: they carry their own activities.
 ACTIVITIES = {
     (7, 28): ["running"], (7, 30): ["badminton"], (7, 31): ["cycling"],
-    (8, 3): ["running"], (8, 5): ["strength", "yoga"], (8, 8): ["cycling"],
-    (8, 11): ["walking"], (8, 12): ["running"], (8, 14): ["badminton"],
-    (8, 16): ["running", "strength", "yoga"], (8, 19): ["walking"], (8, 21): ["yoga"],
-    (8, 24): ["cycling"], (8, 26): ["other"], (8, 29): ["running"],
-    (8, 30): ["walking", "yoga", "running", "cycling", "strength"],
-    (9, 2): ["walking"], (9, 5): ["yoga", "strength"],
+    (8, 3): ["running"], (8, 5): ["strength", "stretching"], (8, 8): ["hiking"],
+    (8, 11): ["walking"], (8, 12): ["swimming"], (8, 14): ["badminton"],
+    (8, 16): ["running", "strength", "yoga"], (8, 19): ["badminton", "running"], (8, 21): ["yoga"],
+    (8, 24): ["cycling"], (8, 26): ["other"], (8, 27): ["boxing"], (8, 29): ["soccer"],
+    (8, 30): ["walking", "dancing", "running", "cycling", "strength"],
+    (9, 2): ["skiing"], (9, 5): ["volleyball", "strength"],
 }
 MONTH_SHOWN = (2026, 8)
 TODAY = 23

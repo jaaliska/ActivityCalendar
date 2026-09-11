@@ -14,9 +14,25 @@ yoga.svg      | yoga-posture       | https://www.svgrepo.com/svg/113461/yoga-pos
 cycling.svg   | cycling            | https://www.svgrepo.com/svg/104554/cycling            | CC0
 other.svg     | своя отрисовка     | нарисована в проекте, точка на сетке 24               | своя, без
               |                    |                                                       | обязательств
-badminton.svg | badminton          | https://www.svgrepo.com/svg/76734/badminton           | CC0
 running.svg   | running-1          | https://www.svgrepo.com/svg/482824/running-1          | PD
 walking.svg   | walking-1          | https://www.svgrepo.com/svg/482796/walking-1          | PD
+
+Добавлено в Блоке 10 (лицензии проверены вручную по страницам значков):
+
+badminton.svg     | badminton-player          | https://www.svgrepo.com/svg/127976/badminton-player           | CC0
+basketball.svg    | basketball-player-scoring | https://www.svgrepo.com/svg/9863/basketball-player-scoring    | CC0
+boxing.svg        | boxing-fighter            | https://www.svgrepo.com/svg/103667/boxing-fighter             | CC0
+dancing.svg       | dancing-motion            | https://www.svgrepo.com/svg/104998/dancing-motion             | CC0
+hiking.svg        | hiking                    | https://www.svgrepo.com/svg/488994/hiking                     | PD
+martial_arts.svg  | man-attacking             | https://www.svgrepo.com/svg/25017/man-attacking               | CC0
+skiing.svg        | skiing-man                | https://www.svgrepo.com/svg/89733/skiing-man                  | CC0
+snowboarding.svg  | snowboard                 | https://www.svgrepo.com/svg/142200/snowboard                  | CC0
+soccer.svg        | soccer-player-motion      | https://www.svgrepo.com/svg/103289/soccer-player-motion       | CC0
+stretching.svg    | stretching                | https://www.svgrepo.com/svg/154908/stretching                 | CC0
+swimming.svg      | swimming                  | https://www.svgrepo.com/svg/490391/swimming                   | PD
+table_tennis.svg  | table-tennis              | https://www.svgrepo.com/svg/140481/table-tennis               | CC0
+tennis.svg        | tennis-person-play-sport  | https://www.svgrepo.com/svg/308122/tennis-person-play-sport   | CC0
+volleyball.svg    | volleyball-player-motion  | https://www.svgrepo.com/svg/172286/volleyball-player-motion   | CC0
 
 Что делать с этими данными дальше:
 - CC0 и PD — ничего не требуется.

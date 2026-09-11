@@ -7,6 +7,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,18 +21,29 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,9 +64,13 @@ import java.time.Instant
 @Composable
 fun HealthConnectScreen(
     state: HealthConnectUiState,
+    refreshing: Boolean,
+    syncOutcome: SyncOutcome?,
     permissions: Set<String>,
     onPermissionsResult: () -> Unit,
     onSyncNow: () -> Unit,
+    onRebuild: () -> Unit,
+    onSyncOutcomeShown: () -> Unit,
     onScreenResumed: () -> Unit,
     onImportClick: () -> Unit,
     onBack: () -> Unit,
@@ -63,6 +80,20 @@ fun HealthConnectScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = PermissionController.createRequestPermissionResultContract(),
     ) { onPermissionsResult() }
+    var confirmingRebuild by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    SyncOutcomeSnackbar(syncOutcome, snackbarHostState, onSyncOutcomeShown)
+
+    if (confirmingRebuild) {
+        RebuildDialog(
+            onConfirm = {
+                confirmingRebuild = false
+                onRebuild()
+            },
+            onDismiss = { confirmingRebuild = false },
+        )
+    }
 
     OnResume(onScreenResumed)
 
@@ -71,48 +102,53 @@ fun HealthConnectScreen(
         topBar = {
             DetailTopBar(title = stringResource(R.string.health_connect_title), onBack = onBack)
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            when (state) {
-                is HealthConnectUiState.NotConnected -> NotConnected(
-                    canAsk = state.canAsk,
-                    onConnect = { permissionLauncher.launch(permissions) },
-                    onOpenSettings = { context.openHealthConnectPermissions() },
-                )
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            if (refreshing) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                when (state) {
+                    is HealthConnectUiState.NotConnected -> NotConnected(
+                        canAsk = state.canAsk,
+                        onConnect = { permissionLauncher.launch(permissions) },
+                        onOpenSettings = { context.openHealthConnectPermissions() },
+                    )
 
-                is HealthConnectUiState.NotAvailable -> NotAvailable(
-                    canInstall = state.canInstall,
-                    onImportClick = onImportClick,
-                    onInstall = { context.openHealthConnectInStore() },
-                )
+                    is HealthConnectUiState.NotAvailable -> NotAvailable(
+                        canInstall = state.canInstall,
+                        onImportClick = onImportClick,
+                        onInstall = { context.openHealthConnectInStore() },
+                    )
 
-                HealthConnectUiState.Syncing -> Syncing()
+                    HealthConnectUiState.Syncing -> Syncing()
 
-                is HealthConnectUiState.Connected -> Connected(
-                    lastSync = state.lastSync,
-                    backgroundSync = state.backgroundSync,
-                    onSyncNow = onSyncNow,
-                    onFixBackground = { context.openHealthConnectPermissions() },
-                )
+                    is HealthConnectUiState.Connected -> Connected(
+                        lastSync = state.lastSync,
+                        backgroundSync = state.backgroundSync,
+                        syncing = refreshing,
+                        onSyncNow = onSyncNow,
+                        onRebuild = { confirmingRebuild = true },
+                        onFixBackground = { context.openHealthConnectPermissions() },
+                    )
 
-                HealthConnectUiState.NoWorkouts -> NoWorkouts(
-                    onCheckAgain = onSyncNow,
-                    onOpenGarmin = context.garminConnectIntent()?.let {
-                        { context.startActivity(it) }
-                    },
-                )
+                    HealthConnectUiState.NoWorkouts -> NoWorkouts(
+                        onCheckAgain = onSyncNow,
+                        onOpenGarmin = context.garminConnectIntent()?.let {
+                            { context.startActivity(it) }
+                        },
+                    )
 
-                is HealthConnectUiState.SyncFailed -> SyncFailed(
-                    failedAt = state.failedAt,
-                    lastSync = state.lastSync,
-                    onTryAgain = onSyncNow,
-                )
+                    is HealthConnectUiState.SyncFailed -> SyncFailed(
+                        failedAt = state.failedAt,
+                        lastSync = state.lastSync,
+                        onTryAgain = onSyncNow,
+                    )
+                }
             }
         }
     }
@@ -244,7 +280,9 @@ private fun Syncing() {
 private fun Connected(
     lastSync: Instant?,
     backgroundSync: Boolean,
+    syncing: Boolean,
     onSyncNow: () -> Unit,
+    onRebuild: () -> Unit,
     onFixBackground: () -> Unit,
 ) {
     Card {
@@ -314,6 +352,69 @@ private fun Connected(
         text = stringResource(R.string.health_connect_sync_now),
         icon = R.drawable.ic_sync,
         onClick = onSyncNow,
+        enabled = !syncing,
+    )
+    TextButton(
+        onClick = onRebuild,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(stringResource(R.string.health_connect_rebuild))
+    }
+}
+
+@Composable
+private fun SyncOutcomeSnackbar(
+    outcome: SyncOutcome?,
+    snackbarHostState: SnackbarHostState,
+    onShown: () -> Unit,
+) {
+    val message = outcome?.let { syncOutcomeMessage(it) }
+    LaunchedEffect(outcome) {
+        if (message != null) {
+            snackbarHostState.showSnackbar(message)
+            onShown()
+        }
+    }
+}
+
+@Composable
+private fun syncOutcomeMessage(outcome: SyncOutcome): String {
+    val added = pluralStringResource(
+        R.plurals.health_connect_sync_added,
+        outcome.added,
+        outcome.added,
+    )
+    val removed = pluralStringResource(
+        R.plurals.health_connect_sync_removed,
+        outcome.removed,
+        outcome.removed,
+    )
+    return when {
+        outcome.added == 0 && outcome.removed == 0 ->
+            stringResource(R.string.health_connect_sync_up_to_date)
+
+        outcome.removed == 0 -> added
+        outcome.added == 0 -> removed
+        else -> stringResource(R.string.health_connect_sync_added_and_removed, added, removed)
+    }
+}
+
+@Composable
+private fun RebuildDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.health_connect_rebuild_title)) },
+        text = { Text(stringResource(R.string.health_connect_rebuild_text)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.health_connect_rebuild_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
     )
 }
 

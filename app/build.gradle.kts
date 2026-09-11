@@ -1,8 +1,16 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
+
+val signing = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use(::load)
+}
+val keystore = signing.getProperty("releaseKeystoreFile")?.let(rootProject::file)?.takeIf { it.exists() }
 
 android {
     namespace = "com.jaaliska.activitycalendar"
@@ -15,16 +23,28 @@ android {
         minSdk = 28
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (keystore != null) {
+            create("release") {
+                storeFile = keystore
+                storePassword = signing.getProperty("releaseKeystorePassword")
+                keyAlias = signing.getProperty("releaseKeyAlias")
+                keyPassword = signing.getProperty("releaseKeyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             optimization {
-                enable = false
+                enable = true
             }
+            if (keystore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

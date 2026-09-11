@@ -40,22 +40,27 @@ fun AppNavHost(
                         observeRecentSummary = container.observeRecentSummary,
                         repository = container.activityRepository,
                         getHealthConnectStatus = container.getHealthConnectStatus,
+                        loadDemoData = container.loadDemoData,
                     )
                 },
             )
             val calendarState by calendarViewModel.state.collectAsState()
             val syncStopped by calendarViewModel.syncStopped.collectAsState()
+            val demoFailed by calendarViewModel.demoFailed.collectAsState()
 
             CalendarScreen(
                 state = calendarState,
                 anchor = calendarViewModel.anchor,
                 syncStopped = syncStopped,
+                demoFailed = demoFailed,
                 onMonthSettled = calendarViewModel::showMonth,
                 onDaySelected = calendarViewModel::selectDay,
                 onTodayClick = calendarViewModel::clearDaySelection,
                 onSettingsClick = { navController.navigate(Destination.SETTINGS.route) },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
+                onDemoClick = calendarViewModel::loadDemo,
+                onDemoFailureShown = calendarViewModel::demoFailureShown,
                 onRetry = calendarViewModel::retry,
                 onScreenResumed = calendarViewModel::refreshSyncStatus,
             )
@@ -65,7 +70,12 @@ fun AppNavHost(
                 factory = viewModelFactoryOf {
                     SettingsViewModel(
                         importHistory = container.importHistory,
+                        repository = container.activityRepository,
+                        appearanceSettings = container.appearanceSettings,
                         getHealthConnectStatus = container.getHealthConnectStatus,
+                        loadDemoData = container.loadDemoData,
+                        exportActivities = container.exportActivities,
+                        fileSource = container.fileSource,
                     )
                 },
             )
@@ -76,6 +86,11 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onHealthConnectClick = { navController.navigate(Destination.HEALTH_CONNECT.route) },
+                onColorSchemeClick = settingsViewModel::selectColorScheme,
+                onDemoLoadClick = settingsViewModel::loadDemo,
+                onDemoRemoveClick = settingsViewModel::removeDemo,
+                onExport = settingsViewModel::export,
+                onMessageShown = settingsViewModel::messageShown,
                 onScreenResumed = settingsViewModel::refresh,
             )
         }
@@ -107,12 +122,18 @@ fun AppNavHost(
                 },
             )
             val healthConnectState by healthConnectViewModel.state.collectAsState()
+            val refreshing by healthConnectViewModel.refreshing.collectAsState()
+            val syncOutcome by healthConnectViewModel.syncOutcome.collectAsState()
 
             HealthConnectScreen(
                 state = healthConnectState,
+                refreshing = refreshing,
+                syncOutcome = syncOutcome,
                 permissions = healthConnectViewModel.permissions,
                 onPermissionsResult = healthConnectViewModel::onPermissionsRequested,
                 onSyncNow = healthConnectViewModel::sync,
+                onRebuild = healthConnectViewModel::rebuild,
+                onSyncOutcomeShown = healthConnectViewModel::syncOutcomeShown,
                 onScreenResumed = healthConnectViewModel::refresh,
                 onImportClick = { navController.navigate(Destination.IMPORT.route) },
                 onBack = { navController.popBackStack() },

@@ -8,6 +8,7 @@ import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.domain.usecase.CalendarWindow
 import com.jaaliska.activitycalendar.domain.usecase.DayActivities
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import com.jaaliska.activitycalendar.domain.usecase.MonthActivities
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
 import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
@@ -43,6 +44,7 @@ class CalendarViewModel(
     private val observeRecentSummary: ObserveRecentSummary,
     private val repository: ActivityRepository,
     private val getHealthConnectStatus: GetHealthConnectStatus,
+    private val loadDemoData: LoadDemoData,
     private val clock: Clock = Clock.systemDefaultZone(),
 ) : ViewModel() {
 
@@ -66,6 +68,11 @@ class CalendarViewModel(
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = CalendarUiState.Calendar(today),
         )
+
+    private val _demoFailed = MutableStateFlow(false)
+
+    /** The sample activities could not be stored; the screen says so and forgets it. */
+    val demoFailed: StateFlow<Boolean> = _demoFailed.asStateFlow()
 
     private val _syncStopped = MutableStateFlow(false)
 
@@ -96,6 +103,17 @@ class CalendarViewModel(
     /** Drops the picked day, so the panel goes back to the last seven days. */
     fun clearDaySelection() {
         selectedDay.value = null
+    }
+
+    fun loadDemo() {
+        viewModelScope.launch {
+            runCatching { loadDemoData() }.onFailure { _demoFailed.value = true }
+        }
+    }
+
+    /** The screen has told the user that the sample activities did not load. */
+    fun demoFailureShown() {
+        _demoFailed.value = false
     }
 
     /** Reads the months again after a failure, without restarting the app. */

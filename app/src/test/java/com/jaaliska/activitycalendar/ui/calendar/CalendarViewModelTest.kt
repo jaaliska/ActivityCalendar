@@ -3,10 +3,12 @@ package com.jaaliska.activitycalendar.ui.calendar
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivityRepository
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
+import com.jaaliska.activitycalendar.domain.ParsedActivities
 import com.jaaliska.activitycalendar.domain.ActivityType
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSource
 import com.jaaliska.activitycalendar.domain.healthconnect.FakeHealthConnectSyncState
 import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
+import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import com.jaaliska.activitycalendar.domain.usecase.ObserveCalendarMonths
 import com.jaaliska.activitycalendar.domain.usecase.ObserveRecentSummary
 import kotlinx.coroutines.Dispatchers
@@ -22,9 +24,12 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
+import java.io.InputStream
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
@@ -314,11 +319,39 @@ class CalendarViewModelTest {
     private fun calendarOf(viewModel: CalendarViewModel) =
         viewModel.state.value as CalendarUiState.Calendar
 
-    private fun viewModelOn(repository: ActivityRepository) = CalendarViewModel(
+    @Test
+    fun `demo data that cannot be loaded is reported to the screen`() = runTest(dispatcher) {
+        val viewModel = viewModelOn(
+            FakeRepository(),
+            demoData = LoadDemoData(
+                repository = FakeRepository(),
+                parser = { ParsedActivities(emptyList(), emptyList()) },
+                file = { throw IOException("no such asset") },
+            ),
+        )
+
+        viewModel.loadDemo()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.demoFailed.value)
+
+        viewModel.demoFailureShown()
+        assertFalse(viewModel.demoFailed.value)
+    }
+
+    private fun viewModelOn(
+        repository: ActivityRepository,
+        demoData: LoadDemoData = LoadDemoData(
+            repository = repository,
+            parser = { ParsedActivities(emptyList(), emptyList()) },
+            file = { InputStream.nullInputStream() },
+        ),
+    ) = CalendarViewModel(
         observeCalendarMonths = ObserveCalendarMonths(repository),
         observeRecentSummary = ObserveRecentSummary(repository),
         repository = repository,
         getHealthConnectStatus = neverConnected,
+        loadDemoData = demoData,
         clock = clock,
     )
 
@@ -339,9 +372,22 @@ class CalendarViewModelTest {
 
         override fun observeHistoryStart(): Flow<LocalDate?> = flow { emit(historyStart) }
 
+        override suspend fun getAll(): List<Activity> = emptyList()
+
+        override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
+
         override suspend fun getMonth(month: YearMonth): List<Activity> = activities
 
         override suspend fun save(activities: List<Activity>): Int = 0
+
+        override suspend fun deleteMissing(
+            source: ActivitySourceType,
+            from: LocalDateTime,
+            toExclusive: LocalDateTime,
+            kept: List<Activity>,
+        ): Int = 0
+
+        override suspend fun deleteAllFrom(source: ActivitySourceType) = Unit
     }
 
     /**
@@ -365,9 +411,22 @@ class CalendarViewModelTest {
         override fun observeHistoryStart(): Flow<LocalDate?> =
             thenReturns?.observeHistoryStart() ?: flow { emit(null) }
 
+        override suspend fun getAll(): List<Activity> = emptyList()
+
+        override fun observeCountFrom(source: ActivitySourceType): Flow<Int> = flow { emit(0) }
+
         override suspend fun getMonth(month: YearMonth): List<Activity> = emptyList()
 
         override suspend fun save(activities: List<Activity>): Int = 0
+
+        override suspend fun deleteMissing(
+            source: ActivitySourceType,
+            from: LocalDateTime,
+            toExclusive: LocalDateTime,
+            kept: List<Activity>,
+        ): Int = 0
+
+        override suspend fun deleteAllFrom(source: ActivitySourceType) = Unit
     }
 
     private companion object {
@@ -382,7 +441,7 @@ class CalendarViewModelTest {
             distanceMeters = null,
             title = null,
             sourceId = null,
-            source = ActivitySourceType.MANUAL,
+            source = ActivitySourceType.GARMIN_CSV,
         )
     }
 }

@@ -34,6 +34,7 @@ import com.jaaliska.activitycalendar.R
 fun NoDataState(
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
+    onDemoClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -65,9 +66,11 @@ fun NoDataState(
         )
 
         Spacer(Modifier.height(32.dp))
-        // Demo data itself arrives in block 10; the row is drawn now so its place is settled.
         Box(
-            modifier = Modifier.height(44.dp),
+            modifier = Modifier
+                .height(44.dp)
+                .clickable(onClick = onDemoClick)
+                .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(

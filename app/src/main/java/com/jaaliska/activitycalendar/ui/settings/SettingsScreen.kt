@@ -1,8 +1,14 @@
 package com.jaaliska.activitycalendar.ui.settings
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,24 +19,40 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.R
 import com.jaaliska.activitycalendar.ui.UI_DATE
+import com.jaaliska.activitycalendar.ui.UI_FILE_DATE
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.healthconnect.ConnectionStatus
 import com.jaaliska.activitycalendar.ui.components.DetailTopBar
 import com.jaaliska.activitycalendar.ui.components.OnResume
 import com.jaaliska.activitycalendar.ui.healthconnect.timeAgo
-import com.jaaliska.activitycalendar.ui.theme.SchemeSwatches
+import com.jaaliska.activitycalendar.ui.theme.swatch
 import java.time.LocalDate
 
 @Composable
@@ -39,19 +61,61 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onImportClick: () -> Unit,
     onHealthConnectClick: () -> Unit,
+    onColorSchemeClick: (ColorSchemeChoice) -> Unit,
+    onDemoLoadClick: () -> Unit,
+    onDemoRemoveClick: () -> Unit,
+    onExport: (Uri) -> Unit,
+    onMessageShown: () -> Unit,
     onScreenResumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OnResume(onScreenResumed)
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    var confirmingDemo by rememberSaveable { mutableStateOf(false) }
+    var confirmingDemoRemoval by rememberSaveable { mutableStateOf(false) }
+
+    if (confirmingDemo) {
+        DemoDialog(
+            title = stringResource(R.string.settings_demo_confirm_title),
+            text = stringResource(R.string.settings_demo_confirm_text),
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = {
+                confirmingDemo = false
+                onDemoLoadClick()
+            },
+            onDismiss = { confirmingDemo = false },
+        )
+    }
+    if (confirmingDemoRemoval) {
+        DemoDialog(
+            title = stringResource(R.string.settings_demo_remove_title),
+            text = stringResource(R.string.settings_demo_remove_text),
+            confirmText = stringResource(R.string.settings_demo_remove),
+            onConfirm = {
+                confirmingDemoRemoval = false
+                onDemoRemoveClick()
+            },
+            onDismiss = { confirmingDemoRemoval = false },
+        )
+    }
+    val exportName = stringResource(R.string.settings_export_file_name, LocalDate.now().format(UI_FILE_DATE))
+    val exportPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(CSV_MIME_TYPE),
+    ) { uri -> if (uri != null) onExport(uri) }
+
+    MessageSnackbar(state.message, snackbarHostState, onMessageShown)
+
     Scaffold(
         modifier = modifier,
         topBar = { DetailTopBar(title = stringResource(R.string.settings_title), onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
         ) {
             SectionHeader(stringResource(R.string.settings_section_data))
 
@@ -67,18 +131,92 @@ fun SettingsScreen(
                 onClick = onHealthConnectClick,
             )
             RowDivider()
+            if (state.demoActivities == 0) {
+                SettingsRow(
+                    title = stringResource(R.string.settings_demo_title),
+                    subtitle = stringResource(R.string.settings_demo_subtitle),
+                    onClick = { confirmingDemo = true },
+                    trailing = {},
+                )
+            } else {
+                SettingsRow(
+                    title = stringResource(R.string.settings_demo_loaded_title),
+                    subtitle = pluralStringResource(
+                        R.plurals.settings_demo_loaded_subtitle,
+                        state.demoActivities,
+                        state.demoActivities,
+                    ),
+                    trailing = {
+                        TextButton(onClick = { confirmingDemoRemoval = true }) {
+                            Text(stringResource(R.string.settings_demo_remove))
+                        }
+                    },
+                )
+            }
+
+            RowDivider()
             SettingsRow(
-                title = stringResource(R.string.settings_demo_title),
-                subtitle = stringResource(R.string.settings_demo_subtitle),
+                title = stringResource(R.string.settings_export_title),
+                subtitle = stringResource(R.string.settings_export_subtitle),
+                onClick = { exportPicker.launch(exportName) },
+                trailing = {},
             )
 
             SectionHeader(stringResource(R.string.settings_section_appearance))
 
             SettingsRow(
                 title = stringResource(R.string.settings_color_scheme_title),
-                subtitle = stringResource(R.string.settings_color_scheme_blue),
-                trailing = { SchemeCircles(selected = BLUE_SCHEME) },
+                subtitle = stringResource(schemeName(state.colorScheme)),
+                trailing = {
+                    SchemeCircles(selected = state.colorScheme, onSelect = onColorSchemeClick)
+                },
             )
+        }
+    }
+}
+
+@Composable
+private fun DemoDialog(
+    title: String,
+    text: String,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(text) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(confirmText) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun MessageSnackbar(
+    message: SettingsMessage?,
+    snackbarHostState: SnackbarHostState,
+    onShown: () -> Unit,
+) {
+    val text = when (message) {
+        is SettingsMessage.Exported -> pluralStringResource(
+            R.plurals.settings_export_done,
+            message.activities,
+            message.activities,
+        )
+
+        SettingsMessage.ExportFailed -> stringResource(R.string.settings_export_failed)
+        SettingsMessage.DemoFailed -> stringResource(R.string.demo_failed)
+        null -> null
+    }
+    LaunchedEffect(message) {
+        if (text != null) {
+            snackbarHostState.showSnackbar(text)
+            onShown()
         }
     }
 }
@@ -160,23 +298,38 @@ private fun SettingsRow(
 }
 
 @Composable
-private fun SchemeCircles(selected: Int) {
+private fun SchemeCircles(
+    selected: ColorSchemeChoice,
+    onSelect: (ColorSchemeChoice) -> Unit,
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        SchemeSwatches.forEachIndexed { index, swatch ->
+        ColorSchemeChoice.entries.forEach { choice ->
+            val name = stringResource(schemeName(choice))
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background(color = swatch, shape = CircleShape)
+                    .clip(CircleShape)
+                    .background(color = choice.swatch)
                     .then(
-                        if (index != selected) {
+                        if (choice != selected) {
                             Modifier
                         } else {
                             Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                         },
-                    ),
+                    )
+                    .clickable(onClickLabel = name) { onSelect(choice) }
+                    .semantics { contentDescription = name },
             )
         }
     }
+}
+
+@StringRes
+private fun schemeName(choice: ColorSchemeChoice): Int = when (choice) {
+    ColorSchemeChoice.CRIMSON -> R.string.settings_color_scheme_crimson
+    ColorSchemeChoice.BLUE -> R.string.settings_color_scheme_blue
+    ColorSchemeChoice.ORANGE -> R.string.settings_color_scheme_orange
+    ColorSchemeChoice.GREEN -> R.string.settings_color_scheme_green
 }
 
 @Composable
@@ -184,4 +337,4 @@ private fun RowDivider() {
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 }
 
-private const val BLUE_SCHEME = 1
+private const val CSV_MIME_TYPE = "text/csv"

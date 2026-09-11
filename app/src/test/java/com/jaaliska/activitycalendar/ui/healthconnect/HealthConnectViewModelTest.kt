@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -186,6 +187,32 @@ class HealthConnectViewModelTest {
     }
 
     @Test
+    fun `a sync the user started says what it did`() = runTest(dispatcher) {
+        source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
+        val viewModel = viewModel()
+
+        viewModel.sync()
+        viewModel.settled()
+
+        assertEquals(SyncOutcome(added = 1, removed = 0), viewModel.syncOutcome.value)
+
+        viewModel.syncOutcomeShown()
+        assertNull(viewModel.syncOutcome.value)
+    }
+
+    @Test
+    fun `the sync that answers the permission dialog says nothing on its own`() =
+        runTest(dispatcher) {
+            source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
+            val viewModel = viewModel()
+
+            viewModel.onPermissionsRequested()
+            viewModel.settled()
+
+            assertNull(viewModel.syncOutcome.value)
+        }
+
+    @Test
     fun `asking to sync while a sync runs does not start a second one`() = runTest(dispatcher) {
         source.sessions = listOf(healthConnectActivity("2026-08-12T19:00:00"))
         val viewModel = viewModel()
@@ -214,8 +241,10 @@ class HealthConnectViewModelTest {
         state.drop(1).first()
 
     /** The state the screen ends up in once the synchronisation it started has finished. */
-    private suspend fun HealthConnectViewModel.settled(): HealthConnectUiState =
-        state.first { it != HealthConnectUiState.Syncing }
+    private suspend fun HealthConnectViewModel.settled(): HealthConnectUiState {
+        refreshing.first { !it }
+        return state.first { it != HealthConnectUiState.Syncing }
+    }
 
     private companion object {
         val ZONE: ZoneId = ZoneId.of("Europe/Warsaw")

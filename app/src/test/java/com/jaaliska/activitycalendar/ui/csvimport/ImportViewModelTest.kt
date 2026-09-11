@@ -32,6 +32,7 @@ import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
+import java.io.OutputStream
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
@@ -126,6 +127,7 @@ class ImportViewModelTest {
     fun `a file that cannot be opened is reported as unreadable`() = runTest(dispatcher) {
         val viewModel = viewModel(object : FileSource {
             override fun open(uri: Uri): InputStream = throw FileNotFoundException()
+            override fun openForWriting(uri: Uri): OutputStream = OutputStream.nullOutputStream()
             override fun displayName(uri: Uri): String = "gone.csv"
         })
 
@@ -156,6 +158,7 @@ class ImportViewModelTest {
     ) = viewModel(
         object : FileSource {
             override fun open(uri: Uri): InputStream = content
+            override fun openForWriting(uri: Uri): OutputStream = OutputStream.nullOutputStream()
             override fun displayName(uri: Uri): String = "export.csv"
         },
         clock,

@@ -43,6 +43,8 @@ import java.time.LocalDate
  *
  * @param recent the last seven days, null while they have not been read
  * @param activities what the picked day holds, empty when it holds nothing
+ * @param scrollable false when the screen around the panel scrolls; two scrolling areas one
+ * inside the other are not allowed
  */
 @Composable
 fun DayPanel(
@@ -50,6 +52,7 @@ fun DayPanel(
     activities: List<Activity>,
     recent: PeriodSummary?,
     modifier: Modifier = Modifier,
+    scrollable: Boolean = true,
 ) {
     if (selectedDay == null && recent == null) return
 
@@ -72,7 +75,10 @@ fun DayPanel(
             },
             label = "panel",
         ) { dayPicked ->
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            val bodyScroll = rememberScrollState()
+            Column(
+                modifier = if (scrollable) Modifier.verticalScroll(bodyScroll) else Modifier,
+            ) {
                 if (dayPicked) DayBody(activities) else recent?.let { RecentBody(it) }
             }
         }

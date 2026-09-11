@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.jaaliska.activitycalendar.domain.Activity
 import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import com.jaaliska.activitycalendar.domain.ActivityType
+import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.calendar.gridWeeks
 import com.jaaliska.activitycalendar.domain.usecase.PeriodSummary
 import com.jaaliska.activitycalendar.domain.usecase.TypeTotals
@@ -37,9 +38,67 @@ private fun MonthWithEmptyDayPreview() = PreviewScreen(selectedDay = LocalDate.o
 @Composable
 private fun MonthDarkPreview() = PreviewScreen(selectedDay = null, dark = true)
 
+@Preview(name = "Crimson", widthDp = 390, heightDp = 844)
 @Composable
-private fun PreviewScreen(selectedDay: LocalDate?, dark: Boolean = false) {
-    ActivityCalendarTheme(darkTheme = dark) {
+private fun CrimsonPreview() = PreviewScreen(null, scheme = ColorSchemeChoice.CRIMSON)
+
+@Preview(name = "Crimson dark", widthDp = 390, heightDp = 844)
+@Composable
+private fun CrimsonDarkPreview() = PreviewScreen(null, ColorSchemeChoice.CRIMSON, dark = true)
+
+@Preview(name = "Orange", widthDp = 390, heightDp = 844)
+@Composable
+private fun OrangePreview() = PreviewScreen(null, scheme = ColorSchemeChoice.ORANGE)
+
+@Preview(name = "Orange dark", widthDp = 390, heightDp = 844)
+@Composable
+private fun OrangeDarkPreview() = PreviewScreen(null, ColorSchemeChoice.ORANGE, dark = true)
+
+@Preview(name = "Green", widthDp = 390, heightDp = 844)
+@Composable
+private fun GreenPreview() = PreviewScreen(null, scheme = ColorSchemeChoice.GREEN)
+
+@Preview(name = "Green dark", widthDp = 390, heightDp = 844)
+@Composable
+private fun GreenDarkPreview() = PreviewScreen(null, ColorSchemeChoice.GREEN, dark = true)
+
+/** The whole screen in landscape, where it has to scroll to show the panel. */
+@Preview(name = "Landscape", widthDp = 844, heightDp = 390)
+@Composable
+private fun LandscapePreview() {
+    ActivityCalendarTheme {
+        CalendarScreen(
+            state = CalendarUiState.Calendar(
+                today = TODAY,
+                pages = mapOf(
+                    YearMonth.of(2026, 9) to MonthPage(YearMonth.of(2026, 9), previewWeeks()),
+                ),
+                recent = previewRecent(),
+            ),
+            anchor = YearMonth.of(2026, 9),
+            syncStopped = false,
+            demoFailed = false,
+            onMonthSettled = {},
+            onDaySelected = {},
+            onTodayClick = {},
+            onSettingsClick = {},
+            onImportClick = {},
+            onHealthConnectClick = {},
+            onDemoClick = {},
+            onDemoFailureShown = {},
+            onRetry = {},
+            onScreenResumed = {},
+        )
+    }
+}
+
+@Composable
+private fun PreviewScreen(
+    selectedDay: LocalDate?,
+    scheme: ColorSchemeChoice = ColorSchemeChoice.BLUE,
+    dark: Boolean = false,
+) {
+    ActivityCalendarTheme(scheme = scheme, darkTheme = dark) {
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
