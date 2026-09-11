@@ -20,7 +20,9 @@ import com.jaaliska.activitycalendar.domain.usecase.GetHealthConnectStatus
 import com.jaaliska.activitycalendar.domain.usecase.LoadDemoData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -139,9 +141,14 @@ class SettingsViewModelTest {
     @Test
     fun `the demo row counts the samples and empties when they are removed`() = runTest(dispatcher) {
         val viewModel = viewModel()
+        // One collector for the whole test: the state is only built while a screen looks at it.
+        backgroundScope.launch { viewModel.state.collect {} }
 
         viewModel.loadDemo()
         val loaded = viewModel.state.first { it.demoActivities > 0 }
+        // The row fills as soon as the database commits, while the load is still finishing;
+        // tapping again before it does is what the screen ignores on purpose.
+        advanceUntilIdle()
 
         viewModel.removeDemo()
         val removed = viewModel.state.first { it.demoActivities == 0 }
