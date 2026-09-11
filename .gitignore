@@ -10,10 +10,6 @@ build/
 *.keystore
 *.p12
 .DS_Store
-
-# Выгрузка персональных данных Garmin - держим вне репозитория
 *.zip
 /sample-data/
-
-# Страницы проверки иконок собираются генератором из SVG
 /docs/ux/icon-candidates/*.html
