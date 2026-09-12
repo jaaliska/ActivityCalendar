@@ -9,7 +9,9 @@ import com.jaaliska.activitycalendar.data.csv.GarminCsvWriter
 import com.jaaliska.activitycalendar.data.db.AppDatabase
 import com.jaaliska.activitycalendar.data.file.AssetDemoDataFile
 import com.jaaliska.activitycalendar.data.repository.RoomActivityRepository
+import com.jaaliska.activitycalendar.data.source.FixtureActivitySource
 import com.jaaliska.activitycalendar.domain.ActivityRepository
+import com.jaaliska.activitycalendar.domain.ActivitySourceType
 import com.jaaliska.activitycalendar.domain.ColorSchemeChoice
 import com.jaaliska.activitycalendar.domain.FakeAppearanceSettings
 import com.jaaliska.activitycalendar.domain.FakeImportHistory
@@ -22,13 +24,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -139,22 +139,29 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `the demo row counts the samples and empties when they are removed`() = runTest(dispatcher) {
-        val viewModel = viewModel()
-        // One collector for the whole test: the state is only built while a screen looks at it.
-        backgroundScope.launch { viewModel.state.collect {} }
+    fun `the demo row counts the samples and not the rest of the history`() =
+        runTest(dispatcher) {
+            repository.save(FixtureActivitySource.ALL)
+            val viewModel = viewModel()
 
-        viewModel.loadDemo()
-        val loaded = viewModel.state.first { it.demoActivities > 0 }
-        // The row fills as soon as the database commits, while the load is still finishing;
-        // tapping again before it does is what the screen ignores on purpose.
-        advanceUntilIdle()
+            viewModel.loadDemo()
+
+            val shown = viewModel.state.first { it.demoActivities > 0 }.demoActivities
+            assertEquals(repository.getAll().count { it.source == ActivitySourceType.DEMO }, shown)
+        }
+
+    @Test
+    fun `removing the demo data empties the row`() = runTest(dispatcher) {
+        // Seeded outside the view model: the screen ignores a demo action
+        // while another one is still running.
+        loadDemoData()
+        val viewModel = viewModel()
+        backgroundScope.launch { viewModel.state.collect {} }
+        viewModel.state.first { it.demoActivities > 0 }
 
         viewModel.removeDemo()
-        val removed = viewModel.state.first { it.demoActivities == 0 }
 
-        assertTrue(loaded.demoActivities > 0)
-        assertEquals(0, removed.demoActivities)
+        assertEquals(0, viewModel.state.first { it.demoActivities == 0 }.demoActivities)
     }
 
     /** A file the export writes into, kept in memory. */
